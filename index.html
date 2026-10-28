@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sasi Wonder Cakes – Live Online Baking Classes from Pondicherry</title>
+  <meta name="description" content="Live online baking classes on Google Meet every weekend, from our Pondicherry kitchen. Pick a weekend and reserve your seat in a minute.">
+  <meta name="theme-color" content="#ff9050">
+  <link rel="icon" type="image/png" href="assets/favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600&family=Pinyon+Script&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- fleur-de-lis, reused as a divider -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <symbol id="fdl" viewBox="0 0 32 32">
+      <path d="M16 1.5c3.8 4.6 4.6 9.6 0 16.5-4.6-6.9-3.8-11.9 0-16.5z"/>
+      <path id="fdl-l" d="M13.6 15.2C10.4 9.6 5.2 9.2 4.4 13.6c-.5 3 2 5 4.9 4.3-1.6-.9-2.1-2.4-1-3.6 1.3-1.4 3.6-1 5.3.9z"/>
+      <path d="M18.4 15.2c3.2-5.6 8.4-6 9.2-1.6.5 3-2 5-4.9 4.3 1.6-.9 2.1-2.4 1-3.6-1.3-1.4-3.6-1-5.3.9z"/>
+      <rect x="9.5" y="18.6" width="13" height="2.6" rx="1.3"/>
+      <path d="M16 22.4c-1.3 2.4-1.6 4.4-4.4 7.6 2.6-1.4 3.7-2.2 4.4-3.3.7 1.1 1.8 1.9 4.4 3.3-2.8-3.2-3.1-5.2-4.4-7.6z"/>
+    </symbol>
+  </svg>
+
+  <div id="demo-banner" class="demo-banner" hidden>Demo mode: sample classes saved only in this browser. See SETUP.md to go live.</div>
+
+  <div class="awning" aria-hidden="true"></div>
+  <div class="awning-fringe" aria-hidden="true"></div>
+
+  <header class="site-head">
+    <div class="wrap">
+      <a class="brand" href="#top" aria-label="Sasi Wonder Cakes, home">
+        <img src="assets/logo.png" alt="" width="46" height="46">
+        <span><b id="brand-name">Sasi Wonder Cakes</b><small>Pâtisserie · Pondicherry</small></span>
+      </a>
+      <nav class="nav-links" aria-label="Page sections">
+        <a href="#classes">Classes</a>
+        <a href="#how">How it works</a>
+        <a href="#about-sec">About</a>
+      </nav>
+      <a class="btn sm" href="#classes">Reserve a seat</a>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="wrap hero-grid">
+        <div>
+          <p class="eyebrow">Atelier de pâtisserie · en ligne</p>
+          <h1>Bake something <em>merveilleux</em> this weekend</h1>
+          <p class="lead" id="tagline">Live online baking classes from our Pondicherry kitchen</p>
+          <div class="cta">
+            <a class="btn" href="#classes">Reserve my seat</a>
+            <a class="btn ghost" id="hero-wa" href="#" target="_blank" rel="noopener" hidden>Ask us on WhatsApp</a>
+          </div>
+        </div>
+        <div class="board-wrap">
+          <img class="medallion" src="assets/logo.png" alt="Sasi Wonder Cakes logo" width="118" height="118">
+          <div class="chalkboard">
+            <p class="script">Au programme</p>
+            <dl>
+              <div><dt>Quand</dt><dd>Every weekend</dd></div>
+              <div><dt>Heure</dt><dd id="fact-time">2 – 5 PM</dd></div>
+              <div><dt>Où</dt><dd>Live on Google Meet</dd></div>
+              <div id="fact-price-row" hidden><dt>Prix</dt><dd id="fact-price"></dd></div>
+            </dl>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="pond-band" role="note"><span>Baked in Pondicherry</span><i aria-hidden="true">✦</i><span>India's little France</span><i aria-hidden="true">✦</i><span>Taught live, online</span></div>
+
+    <section class="block" id="classes">
+      <div class="wrap">
+        <p class="kicker">Réservez votre place</p>
+        <h2>Pick your weekend</h2>
+        <p class="sub">Choose a date, tell us who's coming, and your seat is saved. No sign-up needed.</p>
+        <div class="tabs" id="months" role="tablist" aria-label="Month"></div>
+        <div class="cards" id="cards" aria-live="polite">
+          <div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>
+        </div>
+      </div>
+    </section>
+
+    <div class="wrap divider" aria-hidden="true"><svg class="fdl"><use href="#fdl"/></svg></div>
+
+    <section class="block" id="how">
+      <div class="wrap">
+        <p class="kicker">Comment ça marche</p>
+        <h2>How it works</h2>
+        <p class="sub">Three quick steps, then you bake.</p>
+        <div class="steps">
+          <div class="step"><span class="fr">Choisir</span><b>Choose a weekend</b><p>See what we'll bake and how many seats are left.</p></div>
+          <div class="step"><span class="fr">Réserver</span><b>Reserve your seat</b><p>Your name, WhatsApp number and email. Each student books their own seat.</p></div>
+          <div class="step"><span class="fr">Rejoindre</span><b>Join on Google Meet</b><p>The link and what to keep ready are emailed to you, with a reminder on class day.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="block" id="about-sec" hidden>
+      <div class="wrap about-grid">
+        <img class="mascot" src="assets/mascot.png" alt="Illustration of the baker holding a brownie and a plate of cookies" width="200" height="200" loading="lazy">
+        <div>
+          <p class="kicker">Notre histoire</p>
+          <h2>About us</h2>
+          <p class="about" id="about"></p>
+          <div class="cta">
+            <a class="btn ghost" id="about-ig" href="#" target="_blank" rel="noopener" hidden>Follow on Instagram</a>
+            <a class="btn wa" id="about-wa" href="#" target="_blank" rel="noopener" hidden>WhatsApp us</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site">
+    <div class="wrap">
+      <div class="foot-brand">
+        <img src="assets/logo.png" alt="" width="56" height="56" loading="lazy">
+        <div><b id="foot-name">Sasi Wonder Cakes</b><small>Pondicherry, India</small></div>
+      </div>
+      <div class="foot-links">
+        <a class="btn ghost sm" id="foot-ig" href="#" target="_blank" rel="noopener" hidden>Instagram</a>
+        <a class="btn wa sm" id="foot-wa" href="#" target="_blank" rel="noopener" hidden>WhatsApp</a>
+      </div>
+      <p class="foot-script">À bientôt !<small>See you in class.</small></p>
+    </div>
+  </footer>
+
+  <dialog id="dlg" aria-labelledby="dlg-title">
+    <div class="dlg-head">
+      <h2 id="dlg-title">Reserve your seat</h2>
+      <button class="x" type="button" id="dlg-x" aria-label="Close">×</button>
+    </div>
+    <div class="dlg-body" id="dlg-body"></div>
+  </dialog>
+
+  <script src="js/config.js"></script>
+  <script src="js/common.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/vendor/qrcode.min.js"></script>
+  <script src="js/site.js"></script>
+</body>
+</html>

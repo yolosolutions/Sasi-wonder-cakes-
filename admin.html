@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Admin – Sasi Wonder Cakes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="icon" type="image/png" href="assets/favicon.png">
+  <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="demo-banner" class="demo-banner" hidden>Demo mode: data is saved only in this browser. Admin password is <b>admin</b>.</div>
+
+  <!-- login -->
+  <section class="login" id="login" hidden>
+    <form class="card" id="login-form">
+      <h1>Admin</h1>
+      <p class="sub" style="margin-bottom:12px">Sign in to manage classes and students.</p>
+      <div class="field"><label for="pw">Password</label><input id="pw" type="password" autocomplete="current-password" required></div>
+      <div class="err" id="login-err" role="alert"></div>
+      <button class="btn block" id="login-go" type="submit">Sign in</button>
+      <p style="margin-top:14px;text-align:center"><a href="index.html">← Back to website</a></p>
+    </form>
+  </section>
+
+  <!-- app -->
+  <div id="app" hidden>
+    <header class="adm-head">
+      <div class="wrap">
+        <strong class="logo"><img src="assets/favicon.png" alt="" width="34" height="34"><span id="adm-name">Admin</span></strong>
+        <nav class="nav" id="nav" aria-label="Sections">
+          <button data-tab="classes" aria-selected="true">Classes</button>
+          <button data-tab="students" aria-selected="false">Students</button>
+          <button data-tab="menu" aria-selected="false">Menu</button>
+          <button data-tab="settings" aria-selected="false">Settings</button>
+        </nav>
+        <div class="grp" style="display:flex;gap:8px">
+          <a class="btn quiet sm" href="index.html" target="_blank" rel="noopener">View site</a>
+          <button class="btn quiet sm" id="logout" type="button">Sign out</button>
+        </div>
+      </div>
+    </header>
+    <main class="adm"><div class="wrap" id="view"></div></main>
+  </div>
+
+  <dialog id="dlg" aria-labelledby="dlg-title">
+    <div class="dlg-head">
+      <h2 id="dlg-title"></h2>
+      <button class="x" type="button" id="dlg-x" aria-label="Close">×</button>
+    </div>
+    <div class="dlg-body" id="dlg-body"></div>
+  </dialog>
+
+  <script src="js/config.js"></script>
+  <script src="js/common.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/vendor/qrcode.min.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>
