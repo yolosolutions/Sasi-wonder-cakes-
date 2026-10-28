@@ -1,0 +1,11 @@
+{
+  // Tells Cloudflare how to publish this folder as a static website.
+  // The project name in the Cloudflare dashboard must be exactly this name.
+  "name": "sasi-wonder-cakes",
+  "compatibility_date": "2026-09-01",
+  "assets": {
+    "directory": "./",
+    // unknown addresses show 404.html
+    "not_found_handling": "404-page"
+  }
+}

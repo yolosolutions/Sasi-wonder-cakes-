@@ -1,0 +1,14 @@
+# Files in the repo that must NOT be published on the website.
+# (_headers is not listed here on purpose: Cloudflare reads it to apply the security rules.)
+.git
+.github
+.claude
+.gitignore
+.nojekyll
+.assetsignore
+wrangler.jsonc
+backend
+tests
+node_modules
+*.md
+.wrangler

@@ -9,15 +9,24 @@ Use **yolosolutions01@gmail.com** for every account below.
 - [ ] Deploy as a web app (**Execute as: Me**, **Who has access: Anyone**) and authorize it.
 - [ ] Copy the web app URL into `js/config.js` (`API_URL`), then commit and push. (Or tell me the URL and I will do it.)
 
-## 2. Host the website on Cloudflare Pages (5 min)
-Cloudflare Pages is the best free choice for a real site: unmetered free traffic, and it applies the security rules in the `_headers` file. GitHub Pages cannot, and Netlify's free plan pauses a site when its monthly credits run out.
+## 2. Host the website on Cloudflare (5 min)
+Cloudflare is the best free choice for a real site: unmetered free traffic for static files, and it applies the security rules in the `_headers` file. GitHub Pages cannot do that, and Netlify's free plan pauses a site when its monthly credits run out.
 
 - [ ] Sign up at <https://dash.cloudflare.com/sign-up> with **yolosolutions01@gmail.com** (no card needed).
-- [ ] **Workers & Pages → Create → Pages → Connect to Git**, choose the repo `yolosolutions/Sasi-wonder-cakes-`.
-- [ ] Framework preset **None**, build command **empty**, output directory **`/`**. Click **Save and Deploy**.
-- [ ] Your site is live at `https://<project>.pages.dev`. Every push to `main` redeploys it automatically.
-- [ ] Optional: **Custom domains** to use your own address (HTTPS is automatic).
+- [ ] Dashboard home → **Create app** → **Import a repository** (GitHub).
+- [ ] When GitHub opens, make sure the account at the top right is **yolosolutions**. Install the Cloudflare app on it, choose **Only select repositories**, and pick `Sasi-wonder-cakes-`.
+- [ ] Back in Cloudflare, pick the repo and fill in the setup form:
+  - **Project name:** `sasi-wonder-cakes` (it must match the `name` in `wrangler.jsonc`)
+  - **Build command:** leave empty
+  - **Deploy command:** `npx wrangler deploy` (the default)
+  - **Root directory:** leave empty
+- [ ] Click **Deploy**. When it finishes, Cloudflare shows your address, something like `https://sasi-wonder-cakes.<name>.workers.dev`. Every push to `main` redeploys by itself.
+- [ ] Optional: **Settings → Domains & Routes** to use your own domain (HTTPS is automatic).
 - [ ] Open `index.html`, find `og:image`, and replace `https://yolosolutions.github.io/Sasi-wonder-cakes-/` with your final address, so link previews on WhatsApp show your logo. Push the change.
+
+**If it says "Missing git connection":** Cloudflare found the repo, but its GitHub app is not fully linked yet. On github.com (signed in as `yolosolutions`) go to **Settings → Applications → Installed GitHub Apps → Cloudflare Workers & Pages → Configure**, under **Repository access** add `Sasi-wonder-cakes-`, and save. Then reload the Cloudflare page and start **Create app → Import a repository** again.
+
+The files `wrangler.jsonc` (the project name and which folder to publish) and `.assetsignore` (files that must not be published, such as `backend/`, `tests/` and the `.md` guides) are what make this work. Please don't delete them.
 
 ## 3. Set up the dashboard (5 min)
 - [ ] Sign in at `/admin.html` and change the password (Settings → Change password).

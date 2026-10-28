@@ -4,7 +4,7 @@ Nothing here needs a credit card.
 
 | Piece | Free service | What it does |
 |---|---|---|
-| Website | Cloudflare Pages (or GitHub Pages / Netlify) | Shows the site to students |
+| Website | Cloudflare (or GitHub Pages / Netlify) | Shows the site to students |
 | Database + email | Google Sheet + Google Apps Script (your Gmail) | Stores classes and bookings, sends emails |
 | WhatsApp | `wa.me` links (+ optional CallMeBot) | See "How WhatsApp works" below |
 
@@ -35,7 +35,7 @@ window.SWC_CONFIG = { API_URL: 'https://script.google.com/macros/s/XXXX/exec' };
 ```
 
 ## Step 4. Put the website online (5 min)
-**Recommended: Cloudflare Pages.** Free traffic with no meter, no card, updates itself on every push, and it applies the security rules in the `_headers` file. Full steps are in [PRODUCTION.md](PRODUCTION.md).
+**Recommended: Cloudflare.** Free traffic with no meter, no card, updates itself on every push, and it applies the security rules in the `_headers` file. The repo already contains `wrangler.jsonc` and `.assetsignore` for it. Full steps are in [PRODUCTION.md](PRODUCTION.md).
 
 Other options, if you prefer them:
 - **GitHub Pages** (3 clicks, no new account): works, but it cannot apply the `_headers` security rules and caches files for about 10 minutes.
@@ -151,7 +151,9 @@ index.html        public booking page
 admin.html        admin dashboard
 privacy.html      privacy notice and terms (text comes from Settings)
 404.html          "page not found" page
-_headers          security and caching rules (Cloudflare Pages / Netlify)
+_headers          security and caching rules (Cloudflare / Netlify)
+wrangler.jsonc    tells Cloudflare the project name and the folder to publish
+.assetsignore     files Cloudflare must not publish (backend, tests, guides)
 tests/            backend tests, run with: node tests/backend.test.js
 .github/          runs the tests automatically on every push
 PRODUCTION.md     go-live checklist
