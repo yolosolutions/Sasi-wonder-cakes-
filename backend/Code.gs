@@ -46,7 +46,7 @@ const DEFAULT_SETTINGS = {
   defaultCapacity: '10',
   price: '',
   meetLink: '',
-  whatsappNumber: '8870020111',
+  whatsappNumber: '6379293492',
   instagram: 'sasi_wonder_cakes',
   notifyEmail: 'yolosolutions01@gmail.com',
   callmebotKey: '',

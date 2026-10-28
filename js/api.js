@@ -27,7 +27,7 @@
     siteName: 'Sasi Wonder Cakes', tagline: 'Live online baking classes from our Pondicherry kitchen',
     about: 'Sasi Wonder Cakes is a home bakery in Pondicherry. Join our live weekend classes on Google Meet, bake along from your own kitchen, ask questions as you go, and keep the recipes.',
     defaultStart: '14:00', defaultEnd: '17:00', defaultCapacity: '10', price: '1500', meetLink: 'https://meet.google.com/abc-defg-hij',
-    whatsappNumber: '8870020111', instagram: 'sasi_wonder_cakes', notifyEmail: 'yolosolutions01@gmail.com', callmebotKey: '', upiId: 'sasi@oksbi', upiName: '', holdHours: '24',
+    whatsappNumber: '6379293492', instagram: 'sasi_wonder_cakes', notifyEmail: 'yolosolutions01@gmail.com', callmebotKey: '', upiId: 'sasi@oksbi', upiName: '', holdHours: '24',
     defaultStudentPrep: 'A phone, tablet or laptop with a stable internet connection\nThe ingredients and tools listed for the class\nA clean counter where the camera can see your hands\nJoin 5 minutes early',
     defaultAdminPrep: 'Open the Meet link and test your camera and microphone\nLay out demo ingredients and tools\nOpen the attendee list below\nShare the recipe or ingredient list with students if not already sent',
     sendReminders: 'yes', countryCode: '91',
