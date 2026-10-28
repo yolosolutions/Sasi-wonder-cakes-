@@ -262,6 +262,10 @@
         <div class="field"><label for="s-pa">Your checklist before class</label><textarea id="s-pa" name="defaultAdminPrep" rows="5">${esc(s.defaultAdminPrep)}</textarea></div>
         <div class="field"><label for="s-rem">Automatic class-day notifications</label><select id="s-rem" name="sendReminders"><option value="yes" ${s.sendReminders !== 'no' ? 'selected' : ''}>On</option><option value="no" ${s.sendReminders === 'no' ? 'selected' : ''}>Off</option></select><span class="hint">Needs the one-time reminder setup in SETUP.md. You can also send them any time with "Send class-day alerts now" on a class.</span></div>
       </div>
+      <div class="panel"><h3>Terms &amp; cancellation</h3>
+        <p class="sub">Students must tick a box to accept this when they book. One point per line. It also appears on the Privacy &amp; terms page. <b>This is a starting draft, so please edit it to match your real policy.</b></p>
+        <div class="field"><textarea name="policyText" rows="6" aria-label="Terms and cancellation, one point per line">${esc(s.policyText)}</textarea></div>
+      </div>
       <div class="panel"><h3>Website text</h3>
         <div class="row2">
           <div class="field"><label for="s-nm">Name</label><input id="s-nm" name="siteName" value="${esc(s.siteName)}"></div>
@@ -289,7 +293,7 @@
     $('#sf').addEventListener('submit', async (e) => {
       e.preventDefault();
       const f = e.target, data = {};
-      ['whatsappNumber', 'notifyEmail', 'callmebotKey', 'defaultStart', 'defaultEnd', 'defaultCapacity', 'price', 'meetLink', 'upiId', 'upiName', 'holdHours', 'defaultStudentPrep', 'defaultAdminPrep', 'sendReminders', 'siteName', 'tagline', 'instagram', 'about'].forEach((k) => { data[k] = f[k].value; });
+      ['whatsappNumber', 'notifyEmail', 'callmebotKey', 'defaultStart', 'defaultEnd', 'defaultCapacity', 'price', 'meetLink', 'upiId', 'upiName', 'holdHours', 'defaultStudentPrep', 'defaultAdminPrep', 'sendReminders', 'siteName', 'tagline', 'instagram', 'about', 'policyText'].forEach((k) => { data[k] = f[k].value; });
       const b = $('#save-s'); b.disabled = true; b.textContent = 'Saving…';
       try { await adm('saveSettings', { settings: data }); await refresh(); toast('Settings saved', 'ok'); }
       catch (err) { toast(err.message, 'bad'); b.disabled = false; b.textContent = 'Save settings'; }

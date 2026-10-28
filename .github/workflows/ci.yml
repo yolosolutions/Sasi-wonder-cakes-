@@ -1,0 +1,22 @@
+name: CI
+
+# Runs on every push and pull request: checks the scripts and runs the backend tests.
+on:
+  push:
+  pull_request:
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Check the website scripts for syntax errors
+        run: |
+          for f in js/*.js js/vendor/*.js tests/*.js; do
+            node --check "$f"
+          done
+      - name: Run the backend tests
+        run: node tests/backend.test.js

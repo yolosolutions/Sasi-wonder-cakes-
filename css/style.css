@@ -350,4 +350,19 @@ details.adv summary { cursor: pointer; color: var(--muted); padding: 4px 0; }
   .tbl.stack-sm tr { display: block; padding: 10px 0; border-bottom: 1px solid var(--line); }
   .tbl.stack-sm td { display: block; border: none; padding: 2px 14px; }
 }
+/* booking form: terms box and the hidden spam trap */
+.check { display: flex; gap: 10px; align-items: flex-start; font-weight: 400 !important; font-size: .93rem !important; cursor: pointer; }
+.check input { width: 22px !important; height: 22px; min-height: 0 !important; margin-top: 2px; flex: none; accent-color: var(--navy); }
+.terms { background: #fffaf0; border: 1px solid var(--line); border-radius: 12px; padding: 4px 14px; font-size: .9rem; }
+.terms ul { margin: 8px 0; padding-left: 18px; }
+.hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+
+/* privacy page */
+.legal { max-width: 760px; padding: 36px 0 20px; }
+.legal h1 { font-size: clamp(2rem, 5vw, 2.8rem); margin-bottom: 6px; }
+.legal h2 { font-size: 1.25rem; margin: 26px 0 8px; }
+.legal p, .legal li { color: var(--ink); }
+.legal ul { padding-left: 20px; }
+.legal li { margin: 4px 0; }
+.legal .back { margin-top: 30px; }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }

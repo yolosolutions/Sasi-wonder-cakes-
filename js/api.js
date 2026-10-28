@@ -22,17 +22,18 @@
   }
 
   // ---------------- demo backend ----------------
-  const KEY = 'swc_demo_v5';
+  const KEY = 'swc_demo_v6';
   const DEFAULTS = {
     siteName: 'Sasi Wonder Cakes', tagline: 'Live online baking classes from our Pondicherry kitchen',
     about: 'Sasi Wonder Cakes is a home bakery in Pondicherry. Join our live weekend classes on Google Meet, bake along from your own kitchen, ask questions as you go, and keep the recipes.',
     defaultStart: '14:00', defaultEnd: '17:00', defaultCapacity: '10', price: '1500', meetLink: 'https://meet.google.com/abc-defg-hij',
     whatsappNumber: '6379293492', instagram: 'sasi_wonder_cakes', notifyEmail: 'yolosolutions01@gmail.com', callmebotKey: '', upiId: 'sasi@oksbi', upiName: '', holdHours: '24',
+    policyText: 'Your seat is confirmed only after your payment is received.\nIf you cannot attend, tell us at least 24 hours before the class and we will move you to another weekend.\nFees are not refunded once a class has started.\nIf we cancel a class, you can move to another weekend or get a full refund.\nPlease do not share your Google Meet link with others.',
     defaultStudentPrep: 'A phone, tablet or laptop with a stable internet connection\nThe ingredients and tools listed for the class\nA clean counter where the camera can see your hands\nJoin 5 minutes early',
     defaultAdminPrep: 'Open the Meet link and test your camera and microphone\nLay out demo ingredients and tools\nOpen the attendee list below\nShare the recipe or ingredient list with students if not already sent',
     sendReminders: 'yes', countryCode: '91',
   };
-  const PUBLIC_KEYS = ['siteName', 'tagline', 'about', 'defaultStart', 'defaultEnd', 'defaultCapacity', 'price', 'whatsappNumber', 'instagram', 'countryCode'];
+  const PUBLIC_KEYS = ['siteName', 'tagline', 'about', 'defaultStart', 'defaultEnd', 'defaultCapacity', 'price', 'whatsappNumber', 'instagram', 'policyText', 'countryCode'];
   const rid = (p) => p + Math.random().toString(16).slice(2, 10);
   const norm = (t) => SWC.lines(String(t == null ? '' : t).replace(/\r\n?/g, '\n')).join('\n');
   const normDetails = (t) => String(t == null ? '' : t).replace(/\r\n?/g, '\n').split('\n').map((s) => s.trim().replace(/^[-•*]\s+/, '')).filter(Boolean).join('\n').slice(0, 3000);
@@ -108,6 +109,7 @@
     }
     if (sess.capacity - booked <= 0) throw fail('Sorry, this class is full.');
     if (db.bookings.some((b) => b.sessionId === sess.id && isLive(b) && (SWC.waNumber(b.phone, st.countryCode) === phone || String(b.email).toLowerCase() === email))) throw fail('You are already booked for this class with this number or email.');
+    if (!isAdmin) { const open = db.bookings.filter((b) => b.status === 'pending' && isLive(b) && (SWC.waNumber(b.phone, st.countryCode) === phone || String(b.email).toLowerCase() === email)).length; if (open >= 3) throw fail('You already have ' + open + ' unpaid bookings. Please complete payment for those first.'); }
     const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     const code = 'SWC-' + Array.from({ length: 4 }, () => A[Math.floor(Math.random() * A.length)]).join('');
     // a paid class holds the seat as "pending" until the admin marks the payment received; free classes and admin-added students are confirmed
@@ -126,6 +128,8 @@
       return { ok: true, settings, sessions: db.sessions.filter((s) => s.date >= today).sort(sortSess).map((s) => pub(effective(s, db.settings, bm[s.id]))) };
     },
     register(p) {
+      if (p.website) throw fail('Something went wrong. Please try again.');
+      if (!(p.agree === true || p.agree === 'true')) throw fail('Please tick the box to accept the terms and privacy notice.');
       const db = load(); const r = createBooking(db, p, false); save(db);
       console.info('[demo] would email the admin and', r.booking.email, 'about', r.booking.name);
       const pending = r.booking.status === 'pending';

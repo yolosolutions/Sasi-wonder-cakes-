@@ -103,19 +103,25 @@
       '<div class="field"><label for="f-phone">WhatsApp number</label><input id="f-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="98765 43210" required></div>' +
       '<div class="field"><label for="f-email">Email</label><input id="f-email" name="email" type="email" inputmode="email" autocomplete="email" required><span class="hint">Your Google Meet link and class-day reminder are sent here.</span></div>' +
       '<div class="field"><label for="f-note">Anything we should know? <span style="font-weight:400;color:var(--muted)">(optional)</span></label><textarea id="f-note" name="note" maxlength="300" placeholder="Allergies, first-time baker, etc."></textarea></div>' +
+      '<div class="field consent"><label class="check"><input type="checkbox" name="agree" required><span>I agree to the <a href="#" data-terms>terms &amp; cancellation policy</a> and the <a href="privacy.html" target="_blank" rel="noopener">privacy notice</a>.</span></label>' +
+      (SWC.lines(state.settings.policyText).length ? '<div class="terms" id="terms" hidden><ul>' + SWC.lines(state.settings.policyText).map((t) => '<li>' + esc(t) + '</li>').join('') + '</ul></div>' : '') + '</div>' +
+      '<div class="hp" aria-hidden="true"><label>Leave this empty <input name="website" tabindex="-1" autocomplete="off"></label></div>' +
       '<div class="err" id="f-err" role="alert"></div>' +
       '<button class="btn block" id="f-go" type="submit">Confirm booking</button></form>';
     dlg.showModal();
     setTimeout(() => $('#f-name').focus(), 50);
+    const tl = $('#bf [data-terms]');
+    if (tl) tl.addEventListener('click', (e) => { e.preventDefault(); const t = $('#terms'); if (t) t.hidden = !t.hidden; });
 
     $('#bf').addEventListener('submit', async (ev) => {
       ev.preventDefault();
       const f = ev.target, go = $('#f-go'), err = $('#f-err');
       err.textContent = '';
-      const body = { sessionId: x.id, name: f.name.value, phone: f.phone.value, email: f.email.value, note: f.note.value };
+      const body = { sessionId: x.id, name: f.name.value, phone: f.phone.value, email: f.email.value, note: f.note.value, agree: f.agree.checked, website: f.website.value };
       if (body.name.trim().length < 2) { err.textContent = 'Please enter your name.'; f.name.focus(); return; }
       if (SWC.waNumber(body.phone, state.settings.countryCode).length < 11) { err.textContent = 'Please enter a valid WhatsApp number.'; f.phone.focus(); return; }
       if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(body.email.trim())) { err.textContent = 'Please enter a valid email. Your class link is sent there.'; f.email.focus(); return; }
+      if (!f.agree.checked) { err.textContent = 'Please tick the box to accept the terms and privacy notice.'; f.agree.focus(); return; }
       go.disabled = true; go.textContent = 'Booking…';
       try {
         const r = await API.call('register', body);

@@ -12,12 +12,16 @@ const TZ = 'Asia/Kolkata';
 const INITIAL_ADMIN_PASSWORD = 'CHANGE_ME';
 // Class-day notifications (to you and to students) go out at this hour, once setupReminders() has been run.
 const REMINDER_HOUR = 7;
+// Protection against spam bookings (the booking form is public and sends emails):
+const MAX_REGISTRATIONS_PER_HOUR = 60;  // all students together
+const MAX_TRIES_PER_PERSON_PER_HOUR = 4; // per phone number, and per email
+const MAX_UNPAID_PER_PERSON = 3;         // unpaid bookings one phone/email can hold at once
 // ----------------------------------------
 
 const SHEETS = {
   Settings: ['key', 'value'],
   Sessions: ['id', 'date', 'start', 'end', 'topic', 'price', 'capacity', 'status', 'meetLink', 'prepStudents', 'prepAdmin', 'details'],
-  Bookings: ['id', 'code', 'sessionId', 'name', 'phone', 'email', 'seats', 'note', 'createdAt', 'status', 'amount', 'paidAt', 'expires'],
+  Bookings: ['id', 'code', 'sessionId', 'name', 'phone', 'email', 'seats', 'note', 'createdAt', 'status', 'amount', 'paidAt', 'expires', 'consentAt'],
   Menu: ['id', 'category', 'name'],
 };
 
@@ -55,11 +59,12 @@ const DEFAULT_SETTINGS = {
   upiId: '',
   upiName: '',
   holdHours: '24',
+  policyText: 'Your seat is confirmed only after your payment is received.\nIf you cannot attend, tell us at least 24 hours before the class and we will move you to another weekend.\nFees are not refunded once a class has started.\nIf we cancel a class, you can move to another weekend or get a full refund.\nPlease do not share your Google Meet link with others.',
   sendReminders: 'yes',
   countryCode: '91',
 };
 // Visible to everyone. The Meet link and prep lists are deliberately NOT here.
-const PUBLIC_KEYS = ['siteName', 'tagline', 'about', 'defaultStart', 'defaultEnd', 'defaultCapacity', 'price', 'whatsappNumber', 'instagram', 'countryCode'];
+const PUBLIC_KEYS = ['siteName', 'tagline', 'about', 'defaultStart', 'defaultEnd', 'defaultCapacity', 'price', 'whatsappNumber', 'instagram', 'policyText', 'countryCode'];
 
 // ---------- web app entry points ----------
 function doGet() {
@@ -75,10 +80,43 @@ function doPost(e) {
       out = { ok: false, error: err.message, code: err.code || 'error' };
     } else {
       console.error(err && err.stack || err);
+      notifyError_(err);
       out = { ok: false, error: 'Something went wrong. Please try again.', code: 'server' };
     }
   }
   return json_(out);
+}
+
+// Unexpected failures email the admin, at most once an hour, so a broken site doesn't go unnoticed.
+function notifyError_(err) {
+  try {
+    const cache = CacheService.getScriptCache();
+    if (cache.get('errMailed')) return;
+    cache.put('errMailed', '1', 3600);
+    const s = getSettings_();
+    sendEmail_(s.notifyEmail, 'Website problem: something failed',
+      '<p>An unexpected error happened on the booking site:</p><pre>' + esc_(String(err && err.stack || err)).slice(0, 1500) +
+      '</pre><p>Open Apps Script, then Executions, to see details. This email is sent at most once an hour.</p>', s.siteName);
+  } catch (e) { console.error(e); }
+}
+
+function rateLimit_(key, max, message) {
+  const cache = CacheService.getScriptCache();
+  const n = parseInt(cache.get(key) || '0', 10);
+  if (n >= max) throw userError_(message, 'rate');
+  cache.put(key, String(n + 1), 3600);
+}
+
+// Checks done before a public booking is even looked at.
+function guardRegister_(p) {
+  if (p.website) throw userError_('Something went wrong. Please try again.', 'spam'); // hidden field that only bots fill in
+  if (!(p.agree === true || p.agree === 'true')) throw userError_('Please tick the box to accept the terms and privacy notice.');
+  rateLimit_('reg_all', MAX_REGISTRATIONS_PER_HOUR, 'Lots of bookings are coming in right now. Please try again in a few minutes.');
+  const phone = waNum_(p.phone, getSettings_().countryCode);
+  const email = String(p.email || '').trim().toLowerCase();
+  const msg = 'Too many attempts from this phone number or email. Please try again in an hour, or message us on WhatsApp.';
+  if (phone) rateLimit_('reg_p_' + hash_('rl', phone).slice(0, 32), MAX_TRIES_PER_PERSON_PER_HOUR, msg);
+  if (email) rateLimit_('reg_e_' + hash_('rl', email).slice(0, 32), MAX_TRIES_PER_PERSON_PER_HOUR, msg);
 }
 
 function json_(obj) {
@@ -246,6 +284,7 @@ function saveSettings_(incoming) {
     if (k === 'price') v = cleanPrice_(v);
     if (k === 'meetLink') v = cleanMeet_(v);
     if (k === 'upiId') v = cleanUpi_(v);
+    if (k === 'policyText') v = normText_(v).slice(0, 2000);
     if (k === 'holdHours') v = String(Math.min(720, Math.max(0, parseInt(v, 10) || 0)));
     if (k === 'defaultStudentPrep' || k === 'defaultAdminPrep') v = normText_(v);
     if (k === 'sendReminders') v = v === 'no' ? 'no' : 'yes';
@@ -438,6 +477,12 @@ function createBooking_(p, isAdmin) {
       (waNum_(b.phone, settings.countryCode) === phone || String(b.email).toLowerCase() === email);
   });
   if (dupe) throw userError_('You are already booked for this class with this number or email.');
+  if (!isAdmin) {
+    const open = readAll_('Bookings').filter(function (b) {
+      return b.status === 'pending' && isLive_(b) && (waNum_(b.phone, settings.countryCode) === phone || String(b.email).toLowerCase() === email);
+    }).length;
+    if (open >= MAX_UNPAID_PER_PERSON) throw userError_('You already have ' + open + ' unpaid bookings. Please complete payment for those first.');
+  }
 
   // A paid class holds the seat as "pending" until the admin marks the payment received.
   // Free classes, and students the admin adds by hand, are confirmed straight away.
@@ -451,6 +496,7 @@ function createBooking_(p, isAdmin) {
     createdAt: nowStr, status: needsPay ? 'pending' : 'confirmed',
     amount: fee ? String(fee) : '', paidAt: fee && !needsPay ? nowStr : '',
     expires: needsPay && hold > 0 ? String(Date.now() + hold * 3600000) : '',
+    consentAt: isAdmin ? '' : nowStr, // when the student ticked the terms box
   };
   appendRow_('Bookings', booking);
   sess.booked = booked + 1;
@@ -458,6 +504,7 @@ function createBooking_(p, isAdmin) {
 }
 
 function register_(p) {
+  guardRegister_(p);
   const r = withLock_(function () { return createBooking_(p, false); });
   try { notifyNewBooking_(r.booking, r.session, r.settings); } catch (err) { console.error('notify failed', err); }
   const pending = r.booking.status === 'pending';

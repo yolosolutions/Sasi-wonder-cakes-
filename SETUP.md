@@ -4,7 +4,7 @@ Nothing here needs a credit card.
 
 | Piece | Free service | What it does |
 |---|---|---|
-| Website | Netlify / GitHub Pages / Cloudflare Pages | Shows the site to students |
+| Website | Cloudflare Pages (or GitHub Pages / Netlify) | Shows the site to students |
 | Database + email | Google Sheet + Google Apps Script (your Gmail) | Stores classes and bookings, sends emails |
 | WhatsApp | `wa.me` links (+ optional CallMeBot) | See "How WhatsApp works" below |
 
@@ -34,12 +34,17 @@ Open `js/config.js` and paste the URL:
 window.SWC_CONFIG = { API_URL: 'https://script.google.com/macros/s/XXXX/exec' };
 ```
 
-## Step 4. Put the website online (5 min), pick one
-- **Netlify Drop** (easiest): go to <https://app.netlify.com/drop> and drag this whole folder onto the page. You get a free link. You can rename it under *Site settings*.
-- **GitHub Pages**: upload the folder to a GitHub repository, then **Settings → Pages → Deploy from branch**.
-- **Cloudflare Pages**: connect the same repository, with no build command.
+## Step 4. Put the website online (5 min)
+**Recommended: Cloudflare Pages.** Free traffic with no meter, no card, updates itself on every push, and it applies the security rules in the `_headers` file. Full steps are in [PRODUCTION.md](PRODUCTION.md).
+
+Other options, if you prefer them:
+- **GitHub Pages** (3 clicks, no new account): works, but it cannot apply the `_headers` security rules and caches files for about 10 minutes.
+- **Netlify**: works, but its free plan runs on monthly credits and pauses the site when they run out.
+- **Render**: works for static sites too, but is built for servers, so it adds nothing here.
 
 Share the link with students. Your dashboard is at `<your-link>/admin.html`.
+
+**Before you share it, work through [PRODUCTION.md](PRODUCTION.md)**, a short go-live checklist including a ₹1 test payment.
 
 ## Step 5. First login
 1. Open `admin.html` and sign in with the password from Step 1.
@@ -135,7 +140,7 @@ Students do not create passwords or log in. They only enter name, WhatsApp numbe
 If you edit `Code.gs`, use **Deploy → Manage deployments → pencil icon → Version: New version → Deploy**. The URL stays the same.
 
 ## Free limits (plenty for a class)
-Gmail sending is capped at about 100 emails a day through Apps Script. A class of 10 uses about 12 on class day (10 students, your summary and extras), so you are far from the cap. Apps Script and Sheets limits are far above what a baking class needs. Netlify, GitHub Pages and Cloudflare Pages are free for a site this small.
+Gmail sending is capped at about 100 emails a day through Apps Script. A class of 10 uses roughly 40 emails over its whole life (payment email, confirmation and class-day reminder for each student, plus your alerts), spread over several days, so you are well under the cap. Apps Script and Sheets limits are far above what a baking class needs. Netlify, GitHub Pages and Cloudflare Pages are free for a site this small.
 
 ## Look and feel
 The student site has a Pondicherry and French patisserie look: a striped bakery awning, a chalkboard "Au programme" card, navy street-sign date plates (like Pondicherry's French street signs), an ochre colonial-wall band, and a fleur-de-lis divider, all in your logo's orange and chocolate. Your logo and the illustrated baker come from your logo PDF and are in `assets/`. To change a colour, edit the variables at the top of `css/style.css`. To change the Instagram link, WhatsApp number, name or tagline, use **Settings** in the dashboard.
@@ -144,6 +149,12 @@ The student site has a Pondicherry and French patisserie look: a striped bakery 
 ```
 index.html        public booking page
 admin.html        admin dashboard
+privacy.html      privacy notice and terms (text comes from Settings)
+404.html          "page not found" page
+_headers          security and caching rules (Cloudflare Pages / Netlify)
+tests/            backend tests, run with: node tests/backend.test.js
+.github/          runs the tests automatically on every push
+PRODUCTION.md     go-live checklist
 assets/           logo, baker illustration and favicon (from your logo PDF)
 css/style.css     all styling (colours are the variables at the top)
 js/config.js      the one setting you must fill in (API_URL)
