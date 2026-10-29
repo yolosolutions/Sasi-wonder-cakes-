@@ -5,6 +5,11 @@
   Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
   Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://script.google.com https://script.googleusercontent.com; base-uri 'self'; form-action 'self'; object-src 'none'; frame-ancestors 'none'
   Cache-Control: public, max-age=0, must-revalidate
+  Strict-Transport-Security: max-age=31536000
+
+# the admin page is served at /admin (and /admin.html redirects there)
+/admin
+  X-Robots-Tag: noindex, nofollow
 
 /admin.html
   X-Robots-Tag: noindex, nofollow

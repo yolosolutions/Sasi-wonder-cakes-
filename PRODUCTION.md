@@ -22,7 +22,8 @@ Cloudflare is the best free choice for a real site: unmetered free traffic for s
   - **Root directory:** leave empty
 - [ ] Click **Deploy**. When it finishes, Cloudflare shows your address, something like `https://sasi-wonder-cakes.<name>.workers.dev`. Every push to `main` redeploys by itself.
 - [ ] Optional: **Settings → Domains & Routes** to use your own domain (HTTPS is automatic).
-- [ ] Open `index.html`, find `og:image`, and replace `https://yolosolutions.github.io/Sasi-wonder-cakes-/` with your final address, so link previews on WhatsApp show your logo. Push the change.
+- [x] Live at <https://sasi-wonder-cakes.yolosolutions01-6a6.workers.dev/> (admin at `/admin`). The link-preview tags in `index.html` (`og:url`, `og:image`, `canonical`) use this address.
+- [ ] If you later add your own domain, replace that address in those three tags in `index.html` and push.
 
 **If it says "Missing git connection":** Cloudflare found the repo, but its GitHub app is not fully linked yet. On github.com (signed in as `yolosolutions`) go to **Settings → Applications → Installed GitHub Apps → Cloudflare Workers & Pages → Configure**, under **Repository access** add `Sasi-wonder-cakes-`, and save. Then reload the Cloudflare page and start **Create app → Import a repository** again.
 
