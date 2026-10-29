@@ -5,9 +5,10 @@ The website itself is finished and tested. These are the steps that only you can
 Use **yolosolutions01@gmail.com** for every account below.
 
 ## 1. Put the backend on Google (10 min) – see SETUP.md steps 1–2
-- [ ] Create the Google Sheet, paste `backend/Code.gs`, and set your own `INITIAL_ADMIN_PASSWORD`.
-- [ ] Deploy as a web app (**Execute as: Me**, **Who has access: Anyone**) and authorize it.
-- [ ] Copy the web app URL into `js/config.js` (`API_URL`), then commit and push. (Or tell me the URL and I will do it.)
+- [x] Create the Google Sheet, paste `backend/Code.gs`, and set your own `INITIAL_ADMIN_PASSWORD`.
+- [x] Deploy as a web app (**Execute as: Me**, **Who has access: Anyone**) and authorize it. The access must be **Anyone**: "Only myself" works only while you are signed in and breaks the site for everyone else. To change it later: Deploy → Manage deployments → pencil icon → Who has access → Version: New version → Deploy.
+- [x] The web app URL is in `js/config.js` (`API_URL`) and the live site uses it.
+- Whenever `backend/Code.gs` changes in this repo, paste the new code into the Apps Script editor and use Deploy → Manage deployments → pencil → Version: **New version** → Deploy. The link stays the same.
 
 ## 2. Host the website on Cloudflare (5 min)
 Cloudflare is the best free choice for a real site: unmetered free traffic for static files, and it applies the security rules in the `_headers` file. GitHub Pages cannot do that, and Netlify's free plan pauses a site when its monthly credits run out.
