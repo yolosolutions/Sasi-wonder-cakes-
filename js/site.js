@@ -155,14 +155,22 @@
   function showPayment(r) {
     const s = r.session, b = r.booking, pay = r.payment;
     const when = fmtDateLong(s.date) + ', ' + fmtRange(s.start, s.end);
-    const phone = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    // iPhones send every upi:// link to WhatsApp, so they get one button per UPI app instead. (Newer iPads report themselves as a Mac.)
+    const ios = /iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const phone = ios || /Android/i.test(navigator.userAgent);
     const msg = 'Hi! I have paid ' + fmtPrice(pay.amount) + ' for the online baking class on ' + when + '. Name: ' + b.name + '. Ref: ' + b.code + '. Screenshot attached.';
     const wa = waLink(state.settings.whatsappNumber, msg, state.settings.countryCode);
     // On a phone the QR code is also a button: tapping it opens the UPI link, so the phone offers its UPI apps (GPay, PhonePe, Paytm...).
-    const qr = !pay.uri ? '' : phone
+    const qr = !pay.uri ? '' : (phone && !ios)
       ? '<div class="qr"><a class="qr-link" href="' + esc(pay.uri) + '" aria-label="Pay ' + esc(fmtPrice(pay.amount)) + ' with a UPI app">' + qrSvg(pay.uri) + '</a>' +
         '<small><b>Tap the QR code</b> to choose a UPI app and pay</small></div>'
-      : '<div class="qr">' + qrSvg(pay.uri) + '<small>Scan with GPay, PhonePe or Paytm</small></div>';
+      : '<div class="qr">' + qrSvg(pay.uri) + '<small>' + (ios ? 'Scan this from another phone with GPay, PhonePe or Paytm' : 'Scan with GPay, PhonePe or Paytm') + '</small></div>';
+    // iPhone: each app has its own link start. The part after "?" (UPI ID, name, amount, note) is the same for all of them.
+    const IOS_APPS = [['GPay', 'gpay://upi/pay'], ['PhonePe', 'phonepe://pay'], ['Paytm', 'paytmmp://pay']];
+    const iosApps = !(ios && pay.uri) ? '' :
+      '<div class="upi-apps-box"><p class="hint-sm" style="margin:0 0 8px"><b>Choose your UPI app to pay ' + esc(fmtPrice(pay.amount)) + '</b></p>' +
+      '<div class="upi-apps">' + IOS_APPS.map((a) => '<a class="btn ghost" href="' + esc(a[1] + pay.uri.slice(pay.uri.indexOf('?'))) + '">' + a[0] + '</a>').join('') + '</div>' +
+      '<p class="hint-sm" style="margin:8px 0 0">If nothing opens, that app is not on this phone. Try another one, or copy the UPI ID below and pay from any app.</p></div>';
     $('#dlg-title').textContent = 'One last step: pay to confirm';
     $('#dlg-body').innerHTML =
       '<div class="pay">' +
@@ -170,8 +178,8 @@
       (pay.holdHours ? 'We\'ll hold it for ' + pay.holdHours + ' hours.' : '') + '</p>' +
       '<div class="pay-amt"><small>Amount to pay</small><b>' + esc(fmtPrice(pay.amount)) + '</b></div>' +
       (pay.upiId
-        ? (phone ? '<a class="btn block" href="' + esc(pay.uri) + '">Pay ' + esc(fmtPrice(pay.amount)) + ' with GPay / any UPI app</a>' : '') +
-          (phone ? '<details class="qr-details" open><summary>QR code (tap it to pay, or scan it from another phone)</summary>' + qr + '</details>' : qr) +
+        ? (ios ? iosApps : phone ? '<a class="btn block" href="' + esc(pay.uri) + '">Pay ' + esc(fmtPrice(pay.amount)) + ' with GPay / any UPI app</a>' : '') +
+          (phone ? '<details class="qr-details"' + (ios ? '' : ' open') + '><summary>' + (ios ? 'QR code (scan it from another phone)' : 'QR code (tap it to pay, or scan it from another phone)') + '</summary>' + qr + '</details>' : qr) +
           '<div class="upi-line"><span>UPI ID</span><b>' + esc(pay.upiId) + '</b><button class="btn quiet sm" type="button" data-copy="' + esc(pay.upiId) + '" data-msg="UPI ID copied">Copy</button></div>' +
           '<div class="upi-line"><span>Payment note</span><b>' + esc(b.code) + '</b><button class="btn quiet sm" type="button" data-copy="' + esc(b.code) + '" data-msg="Note copied">Copy</button></div>' +
           '<p class="hint-sm">Put the note above when you pay, so we can find your payment.</p>'

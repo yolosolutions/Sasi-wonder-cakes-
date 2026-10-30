@@ -220,6 +220,9 @@ footer.site a.btn.ghost:hover { background: rgba(255, 255, 255, .12); }
 .qr { display: grid; justify-items: center; gap: 6px; }
 .qr svg { width: 200px; height: 200px; background: #fff; padding: 8px; border-radius: 12px; border: 1px solid var(--line); }
 .qr small { color: var(--muted); }
+.upi-apps-box { border: 1px solid var(--line); border-radius: 12px; padding: 12px; background: #fffaf0; }
+.upi-apps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.upi-apps .btn { padding-inline: 6px; text-align: center; justify-content: center; }
 .qr-link { display: block; border-radius: 12px; -webkit-tap-highlight-color: rgba(255, 144, 80, .35); }
 .qr-link svg { border-color: var(--brand); border-width: 2px; }
 .qr-link:active svg { opacity: .8; }
