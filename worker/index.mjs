@@ -875,7 +875,7 @@ function paymentEmail(b, s, settings) {
       '<tr><td style="' + td + '">Payment note</td><td style="' + td + '"><b>' + b.code + '</b></td></tr></table>' +
       (info.upiId ? '<p>Open GPay, PhonePe or Paytm, choose <i>Pay to UPI ID</i>, enter the amount, and put the note above.</p>' :
         '<p>Message us on WhatsApp for the payment details.</p>') +
-      '<p>After paying, send a screenshot on WhatsApp (+' + wa + ') with your reference <b>' + b.code + '</b>. As soon as we confirm it, we\'ll email you the Google Meet link.</p>' +
+      '<p>After paying, send a screenshot on WhatsApp (+' + wa + ') with your reference <b>' + b.code + '</b>. We check payments within 24 hours, and as soon as yours is confirmed we\'ll email you the Google Meet link.</p>' +
       (parseDetails(s.details).length ? '<p style="margin-bottom:0"><b>What we\'ll cover</b></p>' + detailsHtml(s.details) : '') +
       '<p>- ' + esc(brand) + '</p>'), brand);
 }

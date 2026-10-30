@@ -121,6 +121,12 @@
       box.setAttribute('aria-live', 'polite'); box.setAttribute('aria-relevant', 'additions');
       document.body.appendChild(box);
     }
+    // A modal window sits above everything else on the page, so while one is open the cards are shown inside it.
+    // There it is a banner at the top of the window (it pushes the content down instead of covering it).
+    const host = Array.from(document.querySelectorAll('dialog[open]')).pop() || document.body;
+    const inWindow = host !== document.body;
+    box.classList.toggle('in-window', inWindow);
+    if (box.parentNode !== host) { if (inWindow) host.insertBefore(box, host.firstChild); else host.appendChild(box); }
     const ms = Math.min(16000, Math.max(kind === 'bad' ? 8000 : 5000, 3500 + msg.length * (kind === 'bad' ? 90 : 65)));
     const same = Array.from(box.children).find((t) => t.dataset.msg === msg && t.dataset.kind === kind && !t.classList.contains('out'));
     if (same) { // the same message again: keep one card and start its countdown over
@@ -140,6 +146,9 @@
     box.appendChild(el);
     while (box.children.length > 4) box.firstChild.remove();
   }
+
+  // when a window closes, the cards it was holding go back to the page so they are not lost with it
+  document.addEventListener('close', (e) => { const b = $('#toasts'); if (b && e.target.contains && e.target.contains(b)) { b.classList.remove('in-window'); document.body.appendChild(b); } }, true);
 
   // A proper question box instead of the browser's plain one. Resolves to true (yes) or false (no / Esc / click outside).
   // opts: { title, text, yes, no, danger }  (danger = the yes button is red and "no" is the focused, safe choice)

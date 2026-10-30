@@ -435,7 +435,7 @@ console.log('# live room (WebSocket push)');
 
 console.log('# the starter menu list in the backend and the website are the same');
 {
-  const win = {}; vm.runInNewContext(fs.readFileSync(path.join(ROOT, 'js', 'common.js'), 'utf8'), { window: win, document: {}, console });
+  const win = {}; vm.runInNewContext(fs.readFileSync(path.join(ROOT, 'js', 'common.js'), 'utf8'), { window: win, document: { addEventListener() {} }, console });
   ok(JSON.stringify(MENU_SEED) === JSON.stringify(win.SWC.MENU_SEED), 'MENU_SEED in the Worker equals MENU_SEED in js/common.js');
 }
 

@@ -128,6 +128,9 @@
       try {
         const r = await API.call('register', body);
         showSuccess(r);
+        SWC.toast(r.payment
+          ? 'Booking received, ' + r.booking.name + '! Pay to confirm your seat. We check payments within 24 hours and then email your Meet link.'
+          : 'You are booked, ' + r.booking.name + '! Your Meet link is below and in your email.', 'ok');
         load(true);
       } catch (e) {
         say(e.message); go.disabled = false; go.textContent = 'Confirm booking';
@@ -188,7 +191,11 @@
         : '<p>Please message us on WhatsApp for the payment details.</p>') +
       '<div class="stack">' + (wa ? '<a class="btn wa block" target="_blank" rel="noopener" href="' + wa + '">I\'ve paid: send screenshot on WhatsApp</a>' : '') +
       '<button class="btn quiet block" type="button" id="done">Close</button></div>' +
-      '<p class="hint-sm">Once we confirm your payment, the Google Meet link is emailed to <b>' + esc(b.email) + '</b>. Booking reference: <b>' + esc(b.code) + '</b>. Everything is also in your email.</p></div>';
+      '<div class="next-steps"><b>What happens next</b><ol>' +
+      '<li>' + (pay.upiId ? 'Pay <b>' + esc(fmtPrice(pay.amount)) + '</b> with your UPI app, with the note <b>' + esc(b.code) + '</b>.' : 'Message us on WhatsApp for the payment details.') + '</li>' +
+      '<li>Send us the payment screenshot on WhatsApp.</li>' +
+      '<li>We check your payment <b>within 24 hours</b> and email your Google Meet link to <b>' + esc(b.email) + '</b>.</li></ol>' +
+      '<p>Booking reference: <b>' + esc(b.code) + '</b>. The payment details are also in your email.</p></div></div>';
     $('#done').onclick = () => dlg.close();
     $('#dlg-body').querySelectorAll('[data-copy]').forEach((el) => { el.onclick = () => copyText(el.dataset.copy, el.dataset.msg); });
   }

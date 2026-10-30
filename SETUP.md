@@ -124,7 +124,7 @@ Students pay **your own UPI ID** with GPay, PhonePe or Paytm. There is no gatewa
 ## Notifications: what gets sent, and when
 | When | To you (email + WhatsApp if you set the CallMeBot key) | To the student (email) |
 |---|---|---|
-| Student books a paid class | "Awaiting payment": name, email, phone, class, ref | Payment email: amount, your UPI ID, their ref. **No Meet link yet** |
+| Student books a paid class | "Awaiting payment": name, email, phone, class, ref | Payment email: amount, your UPI ID, their ref, and "we check payments within 24 hours". **No Meet link yet** |
 | You tap **Mark paid** | (nothing, you just did it) | "Payment received" with the Google Meet link, what we'll cover, and what to keep ready |
 | Student books a free class | New booking: name, email, phone, class | Confirmation with the Meet link right away |
 | Morning of the class (7 AM) | Class summary: time, Meet link, **your checklist**, class menu, paid attendee list, and who is still unpaid | "Your class is today" with the Meet link and what to keep ready (**paid students only**) |
