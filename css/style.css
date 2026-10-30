@@ -239,6 +239,8 @@ footer.site a.btn.ghost:hover, footer.site button.btn.ghost:hover { background: 
 .foot-script small { font-family: var(--body); font-size: .85rem; color: #c5d2ea; margin-left: 12px; }
 .credit { text-align: center; font-size: .88rem; color: var(--muted); padding: 0 16px; }
 .credit b { font-weight: 700; color: var(--ink); }
+.credit a { color: inherit; text-decoration: none; }
+.credit a:hover, .credit a:focus-visible { text-decoration: underline; text-underline-offset: 3px; }
 .credit .heart { font-size: 1.05em; }
 #app > .credit { margin: 0 0 28px; }
 footer.site .credit { grid-column: 1 / -1; color: #c5d2ea; margin: -6px 0 0; padding: 0; }
