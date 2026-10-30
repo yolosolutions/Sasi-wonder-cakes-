@@ -158,7 +158,11 @@
     const phone = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
     const msg = 'Hi! I have paid ' + fmtPrice(pay.amount) + ' for the online baking class on ' + when + '. Name: ' + b.name + '. Ref: ' + b.code + '. Screenshot attached.';
     const wa = waLink(state.settings.whatsappNumber, msg, state.settings.countryCode);
-    const qr = pay.uri ? '<div class="qr">' + qrSvg(pay.uri) + '<small>Scan with GPay, PhonePe or Paytm</small></div>' : '';
+    // On a phone the QR code is also a button: tapping it opens the UPI link, so the phone offers its UPI apps (GPay, PhonePe, Paytm...).
+    const qr = !pay.uri ? '' : phone
+      ? '<div class="qr"><a class="qr-link" href="' + esc(pay.uri) + '" aria-label="Pay ' + esc(fmtPrice(pay.amount)) + ' with a UPI app">' + qrSvg(pay.uri) + '</a>' +
+        '<small><b>Tap the QR code</b> to choose a UPI app and pay</small></div>'
+      : '<div class="qr">' + qrSvg(pay.uri) + '<small>Scan with GPay, PhonePe or Paytm</small></div>';
     $('#dlg-title').textContent = 'One last step: pay to confirm';
     $('#dlg-body').innerHTML =
       '<div class="pay">' +
@@ -167,7 +171,7 @@
       '<div class="pay-amt"><small>Amount to pay</small><b>' + esc(fmtPrice(pay.amount)) + '</b></div>' +
       (pay.upiId
         ? (phone ? '<a class="btn block" href="' + esc(pay.uri) + '">Pay ' + esc(fmtPrice(pay.amount)) + ' with GPay / any UPI app</a>' : '') +
-          (phone ? '<details class="qr-details"><summary>Paying from another phone? Show QR code</summary>' + qr + '</details>' : qr) +
+          (phone ? '<details class="qr-details" open><summary>QR code (tap it to pay, or scan it from another phone)</summary>' + qr + '</details>' : qr) +
           '<div class="upi-line"><span>UPI ID</span><b>' + esc(pay.upiId) + '</b><button class="btn quiet sm" type="button" data-copy="' + esc(pay.upiId) + '" data-msg="UPI ID copied">Copy</button></div>' +
           '<div class="upi-line"><span>Payment note</span><b>' + esc(b.code) + '</b><button class="btn quiet sm" type="button" data-copy="' + esc(b.code) + '" data-msg="Note copied">Copy</button></div>' +
           '<p class="hint-sm">Put the note above when you pay, so we can find your payment.</p>'

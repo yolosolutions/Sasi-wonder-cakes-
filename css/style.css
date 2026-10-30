@@ -220,6 +220,9 @@ footer.site a.btn.ghost:hover { background: rgba(255, 255, 255, .12); }
 .qr { display: grid; justify-items: center; gap: 6px; }
 .qr svg { width: 200px; height: 200px; background: #fff; padding: 8px; border-radius: 12px; border: 1px solid var(--line); }
 .qr small { color: var(--muted); }
+.qr-link { display: block; border-radius: 12px; -webkit-tap-highlight-color: rgba(255, 144, 80, .35); }
+.qr-link svg { border-color: var(--brand); border-width: 2px; }
+.qr-link:active svg { opacity: .8; }
 .qr-details { border: 1px solid var(--line); border-radius: 12px; padding: 0 12px 12px; }
 .qr-details summary { cursor: pointer; padding: 10px 0; font-weight: 600; color: var(--brand-text); }
 .upi-line { display: flex; align-items: center; gap: 10px; background: #fffaf0; border: 1px solid var(--line); border-radius: 12px; padding: 8px 8px 8px 14px; }
