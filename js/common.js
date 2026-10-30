@@ -109,15 +109,57 @@
     return d.length === 12 && d.startsWith('91') ? '+91 ' + d.slice(2, 7) + ' ' + d.slice(7) : d ? '+' + d : '';
   };
 
-  let toastTimer;
+  // ---------- messages ----------
+  // Cards that stack, stay long enough to read (longer text stays longer, errors longest), pause while the mouse or a
+  // finger is on them, and close with the x. The countdown is a CSS animation on the thin bar, so there are no timers.
   function toast(msg, kind) {
-    let el = $('#toast');
-    if (!el) { el = document.createElement('div'); el.id = 'toast'; el.setAttribute('role', 'status'); document.body.appendChild(el); }
-    el.textContent = msg;
-    el.className = 'show ' + (kind || '');
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => { el.className = ''; }, 3200);
+    kind = kind === 'ok' || kind === 'bad' ? kind : 'info';
+    msg = String(msg || '');
+    let box = $('#toasts');
+    if (!box) {
+      box = document.createElement('div'); box.id = 'toasts';
+      box.setAttribute('aria-live', 'polite'); box.setAttribute('aria-relevant', 'additions');
+      document.body.appendChild(box);
+    }
+    const ms = Math.min(16000, Math.max(kind === 'bad' ? 8000 : 5000, 3500 + msg.length * (kind === 'bad' ? 90 : 65)));
+    const same = Array.from(box.children).find((t) => t.dataset.msg === msg && t.dataset.kind === kind && !t.classList.contains('out'));
+    if (same) { // the same message again: keep one card and start its countdown over
+      const bar = same.querySelector('.bar');
+      bar.style.animation = 'none'; void bar.offsetWidth; bar.style.animation = ''; bar.style.animationDuration = ms + 'ms';
+      return;
+    }
+    const el = document.createElement('div');
+    el.className = 'toast ' + kind; el.dataset.msg = msg; el.dataset.kind = kind;
+    el.setAttribute('role', kind === 'bad' ? 'alert' : 'status');
+    el.innerHTML = '<span class="ti" aria-hidden="true">' + (kind === 'ok' ? '✓' : kind === 'bad' ? '!' : 'i') + '</span><span class="tx"></span>' +
+      '<button type="button" aria-label="Dismiss message">×</button><i class="bar" style="animation-duration:' + ms + 'ms"></i>';
+    el.querySelector('.tx').textContent = msg;
+    const close = () => { if (el.classList.contains('out')) return; el.classList.add('out'); setTimeout(() => el.remove(), 220); };
+    el.querySelector('button').onclick = close;
+    el.querySelector('.bar').addEventListener('animationend', close);
+    box.appendChild(el);
+    while (box.children.length > 4) box.firstChild.remove();
   }
 
-  window.SWC = { $, $$, esc, MONTHS, parts, dow, monthKey, monthLabel, fmtDay, fmtDateShort, fmtDateLong, fmtTime, fmtRange, fmtPrice, lines, parseDetails, detailsHtml, detailsToText, addDishToDetails, qrSvg, MENU_SEED, BROWNIE, todayISO, waNumber, waLink, prettyPhone, toast };
+  // A proper question box instead of the browser's plain one. Resolves to true (yes) or false (no / Esc / click outside).
+  // opts: { title, text, yes, no, danger }  (danger = the yes button is red and "no" is the focused, safe choice)
+  function ask(opts) {
+    return new Promise((resolve) => {
+      const d = document.createElement('dialog'); d.className = 'ask'; d.setAttribute('aria-labelledby', 'ask-t');
+      d.innerHTML = '<div class="ask-body"><h2 id="ask-t"></h2><p class="ask-text"></p><div class="ask-row">' +
+        '<button type="button" class="btn quiet" data-v="0"></button><button type="button" class="btn' + (opts.danger ? ' bad' : '') + '" data-v="1"></button></div></div>';
+      d.querySelector('h2').textContent = opts.title || 'Are you sure?';
+      const p = d.querySelector('.ask-text'); if (opts.text) p.textContent = opts.text; else p.remove();
+      d.querySelector('[data-v="0"]').textContent = opts.no || 'Cancel';
+      d.querySelector('[data-v="1"]').textContent = opts.yes || 'Yes';
+      let done = false;
+      const finish = (v) => { if (done) return; done = true; d.close(); d.remove(); resolve(v); };
+      d.addEventListener('click', (e) => { const b = e.target.closest('[data-v]'); if (b) finish(b.dataset.v === '1'); else if (e.target === d) finish(false); });
+      d.addEventListener('cancel', (e) => { e.preventDefault(); finish(false); });
+      document.body.appendChild(d); d.showModal();
+      d.querySelector(opts.danger ? '[data-v="0"]' : '[data-v="1"]').focus();
+    });
+  }
+
+  window.SWC = { $, $$, esc, MONTHS, parts, dow, monthKey, monthLabel, fmtDay, fmtDateShort, fmtDateLong, fmtTime, fmtRange, fmtPrice, lines, parseDetails, detailsHtml, detailsToText, addDishToDetails, qrSvg, MENU_SEED, BROWNIE, todayISO, waNumber, waLink, prettyPhone, toast, ask };
 })();

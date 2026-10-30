@@ -472,13 +472,13 @@
     if (t.dataset.toggle) { const k = t.dataset.toggle; S.open.has(k) ? S.open.delete(k) : S.open.add(k); render(); return; }
     try {
       switch (t.dataset.act) {
-        case 'brownie': { const f = $('#df'); if (f.topic.value.trim() && !confirm('Replace the topic and the point-by-point list with the brownie example?')) return; f.topic.value = SWC.BROWNIE.topic; f.details.value = SWC.BROWNIE.details; renderChips(); break; }
+        case 'brownie': { const f = $('#df'); if (f.topic.value.trim() && !(await SWC.ask({ title: 'Use the brownie example?', text: 'This replaces the topic and the point-by-point list in this class.', yes: 'Replace' }))) return; f.topic.value = SWC.BROWNIE.topic; f.details.value = SWC.BROWNIE.details; renderChips(); break; }
         case 'rmdish': {
           const ta = $('#x-det'), groups = SWC.parseDetails(ta.value), g = groups[+t.dataset.g];
-          if (g) { const [gone] = g.items.splice(+t.dataset.i, 1); ta.value = SWC.detailsToText(groups); renderChips(); toast('Removed ' + gone); }
+          if (g) { const [gone] = g.items.splice(+t.dataset.i, 1); ta.value = SWC.detailsToText(groups); renderChips(); toast('Removed "' + gone + '" from this class'); }
           break;
         }
-        case 'clearall': { const ta = $('#x-det'); if (ta.value.trim() && confirm('Remove all dishes from this class?')) { ta.value = ''; renderChips(); } break; }
+        case 'clearall': { const ta = $('#x-det'); if (ta.value.trim() && await SWC.ask({ title: 'Remove all dishes?', text: 'Every dish is taken out of this class. You can add them again.', yes: 'Remove all', danger: true })) { ta.value = ''; renderChips(); } break; }
         case 'addcustom': addCustom(); break;
         case 'markpaid': {
           const b = S.bookings.find((q) => q.id === id); t.disabled = true;
@@ -495,7 +495,7 @@
         case 'editdish': dishForm(S.menu.find((m) => m.id === id)); break;
         case 'deldish': {
           const m = S.menu.find((q) => q.id === id);
-          if (confirm(`Remove "${m.name}" from the menu list?\nClasses that already include it keep it.`)) { await adm('deleteMenuItem', { id }); await refresh(); toast('Dish removed'); }
+          if (await SWC.ask({ title: 'Remove "' + m.name + '" from the menu?', text: 'It disappears from the dropdown. Classes that already include it keep it.', yes: 'Remove dish', danger: true })) { await adm('deleteMenuItem', { id }); await refresh(); toast('"' + m.name + '" removed from the menu', 'ok'); }
           break;
         }
         case 'weekends': weekendsForm(); break;
@@ -504,21 +504,21 @@
         case 'addstu': studentForm(x); break;
         case 'csv': downloadCsv(); break;
         case 'status': {
-          if (t.dataset.s === 'cancelled' && !confirm('Cancel this class? Students will see it as cancelled, so message them on WhatsApp.')) return;
-          await adm('saveSession', { session: Object.assign({}, x, { status: t.dataset.s }) }); await refresh(); toast('Updated', 'ok'); break;
+          if (t.dataset.s === 'cancelled' && !(await SWC.ask({ title: 'Cancel this class?', text: 'Students will see it as cancelled. Message them on WhatsApp so they know.', yes: 'Cancel class', no: 'Keep class', danger: true }))) return;
+          await adm('saveSession', { session: Object.assign({}, x, { status: t.dataset.s }) }); await refresh(); toast({ open: 'Booking is open again', closed: 'Booking is closed for this class', cancelled: 'Class cancelled' }[t.dataset.s] || 'Class updated', 'ok'); break;
         }
-        case 'delete': if (confirm('Delete this class?')) { await adm('deleteSession', { id }); await refresh(); toast('Class deleted'); } break;
+        case 'delete': if (await SWC.ask({ title: 'Delete this class?', text: 'The class is removed for good. A class that has students cannot be deleted: cancel it instead.', yes: 'Delete class', danger: true })) { await adm('deleteSession', { id }); await refresh(); toast('Class deleted', 'ok'); } break;
         case 'rmstu': {
           const b = S.bookings.find((q) => q.id === id);
-          if (confirm('Remove ' + b.name + ' from this class?')) { await adm('removeBooking', { id }); await refresh(); toast('Student removed'); }
+          if (await SWC.ask({ title: 'Remove ' + b.name + '?', text: 'They lose their seat in this class and the seat opens up. Nothing is emailed to them.', yes: 'Remove student', danger: true })) { await adm('removeBooking', { id }); await refresh(); toast(b.name + ' was removed from the class', 'ok'); }
           break;
         }
         case 'remind': {
           const mine = S.bookings.filter((b) => b.sessionId === id && !b.expired), n = mine.filter((b) => b.status !== 'pending').length, u = mine.length - n;
-          if (!confirm(`Email the Meet link and prep list to ${n} paid student${n === 1 ? '' : 's'}${u ? ` (${u} unpaid will not get it)` : ''}, and send yourself the class summary?`)) return;
+          if (!(await SWC.ask({ title: 'Send class-day alerts now?', text: `The Meet link and prep list are emailed to ${n} paid student${n === 1 ? '' : 's'}${u ? ` (${u} unpaid will not get it)` : ''}, and you get the class summary.`, yes: 'Send alerts' }))) return;
           t.disabled = true;
           const r = (await adm('remindNow', { sessionId: id })).result; t.disabled = false;
-          toast(r.demo ? 'Demo mode: nothing was sent' : `Sent to ${r.studentEmails} of ${r.students} paid students${r.pending ? ` (${r.pending} unpaid skipped)` : ''}. Your summary: email ${r.adminEmail ? 'sent' : 'not sent'}${r.adminWhatsApp ? ', WhatsApp sent' : ''}`, r.demo || r.adminEmail || r.studentEmails ? 'ok' : 'bad');
+          toast(r.demo ? 'Demo mode: nothing was sent' : `Class-day alerts: ${r.studentEmails} of ${r.students} paid students emailed${r.pending ? `, ${r.pending} unpaid skipped` : ''}. Your summary: email ${r.adminEmail ? 'sent' : 'NOT sent'}${r.adminWhatsApp ? ', WhatsApp sent' : ''}.`, r.demo || r.adminEmail || r.studentEmails ? 'ok' : 'bad');
           break;
         }
         case 'copy': {

@@ -116,19 +116,21 @@
     $('#bf').addEventListener('submit', async (ev) => {
       ev.preventDefault();
       const f = ev.target, go = $('#f-go'), err = $('#f-err');
+      // show the message in a clear box and bring it into view inside the booking window
+      const say = (m, field) => { err.textContent = m; err.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); if (field) field.focus({ preventScroll: true }); };
       err.textContent = '';
       const body = { sessionId: x.id, name: f.name.value, phone: f.phone.value, email: f.email.value, note: f.note.value, agree: f.agree.checked, website: f.website.value };
-      if (body.name.trim().length < 2) { err.textContent = 'Please enter your name.'; f.name.focus(); return; }
-      if (SWC.waNumber(body.phone, state.settings.countryCode).length < 11) { err.textContent = 'Please enter a valid WhatsApp number.'; f.phone.focus(); return; }
-      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(body.email.trim())) { err.textContent = 'Please enter a valid email. Your class link is sent there.'; f.email.focus(); return; }
-      if (!f.agree.checked) { err.textContent = 'Please tick the box to accept the terms and privacy notice.'; f.agree.focus(); return; }
+      if (body.name.trim().length < 2) { say('Please enter your name.', f.name); return; }
+      if (SWC.waNumber(body.phone, state.settings.countryCode).length < 11) { say('Please enter a valid WhatsApp number.', f.phone); return; }
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(body.email.trim())) { say('Please enter a valid email. Your class link is sent there.', f.email); return; }
+      if (!f.agree.checked) { say('Please tick the box to accept the terms and privacy notice.', f.agree); return; }
       go.disabled = true; go.textContent = 'Booking…';
       try {
         const r = await API.call('register', body);
         showSuccess(r);
         load(true);
       } catch (e) {
-        err.textContent = e.message; go.disabled = false; go.textContent = 'Confirm booking';
+        say(e.message); go.disabled = false; go.textContent = 'Confirm booking';
         if (e.code !== 'network') load(true);
       }
     });
