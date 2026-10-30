@@ -233,8 +233,8 @@ footer.site .wrap { display: grid; gap: 22px; grid-template-columns: 1fr auto; a
 .foot-brand b { font-family: var(--display); font-size: 1.25rem; display: block; }
 .foot-brand small { color: #c5d2ea; }
 .foot-links { display: flex; flex-wrap: wrap; gap: 10px; }
-footer.site a.btn.ghost { color: #fff; border-color: rgba(255, 255, 255, .6); }
-footer.site a.btn.ghost:hover { background: rgba(255, 255, 255, .12); }
+footer.site a.btn.ghost, footer.site button.btn.ghost { color: #fff; border-color: rgba(255, 255, 255, .6); }
+footer.site a.btn.ghost:hover, footer.site button.btn.ghost:hover { background: rgba(255, 255, 255, .12); }
 .foot-script { grid-column: 1 / -1; font-family: var(--script); font-size: 2rem; line-height: 1; color: var(--butter); border-top: 1px solid rgba(255, 255, 255, .18); padding-top: 18px; }
 .foot-script small { font-family: var(--body); font-size: .85rem; color: #c5d2ea; margin-left: 12px; }
 

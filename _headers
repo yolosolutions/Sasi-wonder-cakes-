@@ -16,3 +16,14 @@
 
 /assets/*
   Cache-Control: public, max-age=86400
+
+# the app description files and the service worker
+/manifest.webmanifest
+  Content-Type: application/manifest+json
+
+/admin.webmanifest
+  Content-Type: application/manifest+json
+  X-Robots-Tag: noindex, nofollow
+
+/sw.js
+  Cache-Control: no-cache

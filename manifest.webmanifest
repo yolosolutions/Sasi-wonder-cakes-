@@ -1,0 +1,19 @@
+{
+  "name": "Sasi Wonder Cakes",
+  "short_name": "Sasi Cakes",
+  "description": "Live online baking classes from Pondicherry. Pick a weekend and reserve your seat.",
+  "id": "/",
+  "start_url": "/?source=app",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#fff8ec",
+  "theme_color": "#ff9050",
+  "lang": "en-IN",
+  "categories": ["food", "education"],
+  "icons": [
+    { "src": "/assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/assets/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

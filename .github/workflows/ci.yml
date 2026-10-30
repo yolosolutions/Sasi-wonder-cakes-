@@ -15,8 +15,10 @@ jobs:
           node-version: 24
       - name: Check the website scripts for syntax errors
         run: |
-          for f in js/*.js js/vendor/*.js tests/*.mjs worker/*.mjs; do
+          for f in js/*.js js/vendor/*.js sw.js tests/*.mjs worker/*.mjs; do
             node --check "$f"
           done
       - name: Run the backend tests
-        run: node tests/backend.test.mjs
+        run: |
+          node tests/backend.test.mjs
+          node tests/sw.test.mjs

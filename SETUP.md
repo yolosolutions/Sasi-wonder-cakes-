@@ -62,6 +62,19 @@ Nobody, including this repository, ever sees these values.
 - **Cancel or close a class:** open it and use *Close booking* or *Cancel class*. Then WhatsApp the students with the green buttons.
 - **Backup:** in Cloudflare open the database → **Settings → Time Travel** to go back to any minute in the last 30 days. For a file copy, run `npx wrangler d1 export sasi-wonder-cakes-db --remote --output backup.sql` once a month. The **Students** tab can also download a CSV.
 
+## Install it as an app (iPhone and Android)
+The site works like an app: it gets its own icon on the home screen, opens full screen with no browser bars, and shows a friendly page if the connection drops. It costs nothing and there is no app store.
+
+- **Your dashboard:** open `<your-link>/admin`, then add it to the home screen. The icon is labelled **Sasi Admin**.
+- **The student site:** the same steps from the main page give an icon labelled **Sasi Cakes**.
+- **iPhone (use Safari):** tap the **Share** button (square with an arrow) at the bottom, scroll down, tap **Add to Home Screen**, then **Add**. The **Install app** button on the page shows these steps too.
+- **Android (Chrome):** tap **Install app** on the page (it appears when the phone allows it), or open the Chrome menu and choose **Install app** / **Add to Home screen**.
+- **Updates:** nothing to do. The app always loads the newest version of the site when you are online.
+- **Good to know:** bookings, payments and the live dashboard need the internet. Offline, the app shows an "You are offline" page, never old class or student data.
+- **iPhone alerts:** the **Alerts** button (pop-up alerts for new bookings) does not work on iPhone yet, because Apple only allows that through a different system (push messages). On iPhone, keep the Gmail app's notifications on for the booking emails.
+
+The files behind this: `manifest.webmanifest` and `admin.webmanifest` (name, colours, icons), `sw.js` (the service worker), `offline.html`, `js/install.js` (the Install button), and the icons in `assets/icons/`.
+
 ## Live updates (no reloading)
 The dashboard and the class page update the moment something is saved, with no reloading and no extra service to sign up for.
 - **How:** every open page keeps a WebSocket connection to a small Cloudflare **Durable Object** (the "live room", `worker/room.mjs`). After each save the Worker tells the room, and the room tells every connected page that something changed. Only a counter is sent, never names or emails; the page then asks the normal API for the data. While nothing is happening the room sleeps and costs nothing. Durable Objects are free on Cloudflare's free plan (the SQLite kind, which `wrangler.jsonc` already asks for).
@@ -161,6 +174,7 @@ privacy.html      privacy notice and terms (text comes from Settings)
 _headers          security and caching rules (Cloudflare / Netlify)
 wrangler.jsonc    tells Cloudflare the project name and the folder to publish
 .assetsignore     files Cloudflare must not publish (backend, worker, tests, guides)
+manifest.webmanifest, admin.webmanifest, sw.js, offline.html, assets/icons/   the installable app (see "Install it as an app")
 worker/index.mjs  the backend: answers /api, talks to the database, sends the emails
 worker/room.mjs   the live room (Durable Object) that pushes updates to open pages
 tests/            backend tests, run with: node tests/backend.test.mjs

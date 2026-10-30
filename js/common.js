@@ -161,12 +161,13 @@
       const p = d.querySelector('.ask-text'); if (opts.text) p.textContent = opts.text; else p.remove();
       d.querySelector('[data-v="0"]').textContent = opts.no || 'Cancel';
       d.querySelector('[data-v="1"]').textContent = opts.yes || 'Yes';
+      if (opts.single) d.querySelector('[data-v="0"]').remove(); // just an information box with one button
       let done = false;
       const finish = (v) => { if (done) return; done = true; d.close(); d.remove(); resolve(v); };
       d.addEventListener('click', (e) => { const b = e.target.closest('[data-v]'); if (b) finish(b.dataset.v === '1'); else if (e.target === d) finish(false); });
       d.addEventListener('cancel', (e) => { e.preventDefault(); finish(false); });
       document.body.appendChild(d); d.showModal();
-      d.querySelector(opts.danger ? '[data-v="0"]' : '[data-v="1"]').focus();
+      d.querySelector(opts.danger && !opts.single ? '[data-v="0"]' : '[data-v="1"]').focus();
     });
   }
 
