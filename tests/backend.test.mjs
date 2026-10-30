@@ -7,7 +7,8 @@ import vm from 'node:vm';
 import assert from 'node:assert';
 import { fileURLToPath } from 'node:url';
 import { DatabaseSync } from 'node:sqlite';
-import worker, { handleApi, runDaily, MENU_SEED } from '../worker/index.mjs';
+import worker, { handleApi, handleLive, runDaily, MENU_SEED } from '../worker/index.mjs';
+import { LiveRoom } from '../worker/room.mjs';
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SCHEMA = fs.readFileSync(path.join(ROOT, 'backend', 'schema.sql'), 'utf8');
@@ -392,6 +393,44 @@ console.log('# live updates (change counter)');
   await LA({ action: 'removeBooking', id: bid });
   ok((await rev()) !== r2, 'removing a student moves it too');
   ok(!JSON.stringify(await LA({ action: 'adminGet' })).includes('_rev') && !JSON.stringify(await L.call({ action: 'getPublic' })).includes('_rev'), 'the counter is not mixed into the settings');
+}
+
+console.log('# live room (WebSocket push)');
+{
+  const sent = [];
+  const room = { fetch: async (url, init) => { if (typeof url === 'string') sent.push(init.body); return new Response('ok'); } };
+  const W = makeEnv({ ROOM: { idFromName: (n) => n, get: () => room } });
+  const wt = (await W.call({ action: 'login', password: 'secret1' })).token;
+  await W.call({ action: 'saveSettings', token: wt, settings: { price: '700' } });
+  ok(sent.length === 1 && sent[0] === (await W.call({ action: 'pulse' })).rev, 'a save tells the live room the new change counter');
+  await W.call({ action: 'getPublic' }); await W.call({ action: 'saveSession', token: wt, session: { date: 'bad' } });
+  ok(sent.length === 1, 'looking at pages and refused saves tell it nothing');
+  const down = makeEnv({ ROOM: { idFromName: (n) => n, get: () => ({ fetch: async () => { throw new Error('room is down'); } }) } });
+  const dt = (await down.call({ action: 'login', password: 'secret1' })).token;
+  ok((await down.call({ action: 'saveSettings', token: dt, settings: { price: '800' } })).ok, 'if the live room is down the save still works');
+
+  const up = (h) => new Request('https://site.test/api/live', { headers: Object.assign({ upgrade: 'websocket' }, h) });
+  ok((await handleLive(up({ origin: 'https://evil.example' }), W.env)).status === 403, 'another website cannot open the live connection');
+  ok((await handleLive(new Request('https://site.test/api/live', { method: 'POST' }), W.env)).status === 405, 'only GET is accepted');
+  ok((await handleLive(up({}), { DB: W.env.DB })).status === 404, 'without a live room the address does not exist (pages fall back to checking)');
+  let asked = null;
+  const fwd = await handleLive(up({ origin: 'https://site.test' }), { ROOM: { idFromName: (n) => n, get: () => ({ fetch: async (rq) => { asked = rq; return new Response('forwarded'); } }) } });
+  ok(await fwd.text() === 'forwarded' && asked.headers.get('upgrade') === 'websocket', 'a page from the site itself is handed to the live room');
+  ok((await worker.fetch(new Request('https://site.test/api/live', { method: 'POST' }), W.env, W.ctx)).status === 405, '/api/live is routed by the Worker');
+
+  const sockets = [], msgs = [];
+  const mk = (n) => Array.from({ length: n }, (_, i) => ({ send: (m) => msgs.push([i, m]) }));
+  const state = { getWebSockets: () => sockets, acceptWebSocket() {}, setWebSocketAutoResponse() {} };
+  const lr = new LiveRoom(state, {});
+  sockets.push(...mk(3));
+  await lr.fetch(new Request('https://room/notify', { method: 'POST', body: '42' }));
+  ok(msgs.length === 3 && msgs.every((m) => m[1] === '{"rev":"42"}'), 'the room sends the counter, and nothing else, to every connected page');
+  sockets[1].send = () => { throw new Error('gone'); };
+  msgs.length = 0; await lr.fetch(new Request('https://room/notify', { method: 'POST', body: '43' }));
+  ok(msgs.length === 2, 'a page that went away does not stop the others getting the message');
+  ok((await lr.fetch(new Request('https://room/'))).status === 426, 'a plain request to the room is refused');
+  sockets.push(...mk(97));
+  ok((await lr.fetch(new Request('https://room/', { headers: { upgrade: 'websocket' } }))).status === 503, 'the room stops accepting connections at 100 (pages keep checking instead)');
 }
 
 console.log('# the starter menu list in the backend and the website are the same');

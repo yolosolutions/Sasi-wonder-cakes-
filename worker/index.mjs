@@ -72,9 +72,12 @@ class UserError extends Error {
 }
 
 // ---------- entry points ----------
+export { LiveRoom } from './room.mjs';
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+    if (url.pathname === '/api/live') return handleLive(request, env);
     if (url.pathname === '/api') return handleApi(request, env, ctx);
     return env.ASSETS ? env.ASSETS.fetch(request) : new Response('Not found', { status: 404 });
   },
@@ -83,6 +86,23 @@ export default {
     ctx.waitUntil(runDaily(env));
   },
 };
+
+const roomOf = (env) => env.ROOM.get(env.ROOM.idFromName('main'));
+
+// Pages open a WebSocket here and keep it; the live room (worker/room.mjs) pushes the change counter down it.
+export async function handleLive(request, env) {
+  if (!env.ROOM) return new Response('Not found', { status: 404 });
+  if (request.method !== 'GET') return new Response('Method not allowed', { status: 405 });
+  const origin = request.headers.get('origin');
+  if (origin && origin !== new URL(request.url).origin) return new Response('Not allowed', { status: 403 });
+  return roomOf(env).fetch(request);
+}
+
+// Tells everyone who is connected that something changed. Failing here must never fail a save.
+async function notifyRoom(env, rev) {
+  if (!env.ROOM) return;
+  try { await roomOf(env).fetch('https://room/notify', { method: 'POST', body: String(rev) }); } catch (e) { console.error('live notify', e); }
+}
 
 const API_HEADERS = { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' };
 
@@ -116,7 +136,7 @@ const WRITES = new Set(['register', 'saveSettings', 'saveSession', 'generateWeek
 
 async function route(req, env, ctx, request) {
   const out = await dispatch(req, env, ctx, request);
-  if (out && out.ok && WRITES.has(req.action)) await bumpRev(env.DB);
+  if (out && out.ok && WRITES.has(req.action)) ctx.waitUntil(notifyRoom(env, await bumpRev(env.DB)));
   return out;
 }
 
@@ -254,16 +274,17 @@ function cleanMeet(v) {
 }
 
 // ---------- live updates ----------
-// There is no push channel (that would need paid or complex extras). Instead every save bumps one counter, and the
-// open pages ask "what is the counter?" every few seconds. That is a single tiny read; the pages only reload their
-// data when the number has changed.
+// Every save bumps one counter. The live room pushes the new number to every open page at once (WebSocket), and as a
+// safety net the pages also ask "what is the counter?" every so often (a single tiny read). A page reloads its data
+// only when the number has changed.
 async function pulse(db) {
   const row = await one(db, "SELECT value FROM settings WHERE key = '_rev'");
   return { ok: true, rev: row ? row.value : '0' };
 }
 
-function bumpRev(db) {
-  return run(db, "INSERT INTO settings (key, value) VALUES ('_rev', '1') ON CONFLICT(key) DO UPDATE SET value = CAST(CAST(value AS INTEGER) + 1 AS TEXT)");
+async function bumpRev(db) {
+  const row = await one(db, "INSERT INTO settings (key, value) VALUES ('_rev', '1') ON CONFLICT(key) DO UPDATE SET value = CAST(CAST(value AS INTEGER) + 1 AS TEXT) RETURNING value");
+  return row.value;
 }
 
 // ---------- settings ----------

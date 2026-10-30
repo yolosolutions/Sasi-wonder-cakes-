@@ -245,14 +245,16 @@
     return fn(payload);
   }
 
-  // Live updates: asks the backend for its change counter every few seconds and calls onChange when the number is
-  // different from last time. While the tab is hidden it asks about once a minute (opts.background) or not at all.
+  // Live updates. Two layers:
+  //  1. a WebSocket to /api/live: the backend pushes a message the moment anything is saved, and we check the counter at once;
+  //  2. a safety net: every few seconds (once a minute while the WebSocket is up) we ask the backend for its change counter.
+  // onChange runs whenever the counter differs from last time. A hidden tab only keeps up if opts.background is set.
   function watch(onChange, everyMs, opts) {
-    let rev = null, busy = false, last = 0;
+    let rev = null, busy = false, last = 0, skip = 0, linked = false, ws = null, ping = null, retry = 0, closed = false, retryTimer = null;
     const background = !!(opts && opts.background);
-    async function tick() {
+    async function tick(force) {
       const visible = document.visibilityState === 'visible';
-      if (busy || (!visible && (!background || Date.now() - last < 55000))) return;
+      if (busy || (!visible && (!background || (force !== true && Date.now() - last < 55000)))) return;
       busy = true; last = Date.now();
       try {
         const r = await call('pulse');
@@ -260,10 +262,26 @@
         rev = r.rev;
       } catch (e) { /* offline or signed out: try again next time */ } finally { busy = false; }
     }
-    const id = setInterval(tick, everyMs || 15000);
-    document.addEventListener('visibilitychange', tick);
-    tick();
-    return () => { clearInterval(id); document.removeEventListener('visibilitychange', tick); };
+    function connect() {
+      if (closed || demo || !('WebSocket' in window)) return;
+      try { ws = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/api/live'); } catch (e) { return; }
+      ws.onopen = () => { retry = 0; linked = true; ping = setInterval(() => { if (ws.readyState === 1) ws.send('ping'); }, 50000); tick(true); };
+      ws.onmessage = (ev) => { if (ev.data !== 'pong') tick(true); };
+      ws.onerror = () => { try { ws.close(); } catch (e) {} };
+      ws.onclose = () => {
+        linked = false; clearInterval(ping);
+        if (!closed) retryTimer = setTimeout(connect, Math.min(60000, 2000 * Math.pow(2, retry++)));
+      };
+    }
+    const id = setInterval(() => { if (linked && ++skip % 4) return; tick(); }, everyMs || 15000);
+    const onVisible = () => tick();
+    document.addEventListener('visibilitychange', onVisible);
+    tick(); connect();
+    return () => {
+      closed = true; clearInterval(id); clearInterval(ping); clearTimeout(retryTimer);
+      document.removeEventListener('visibilitychange', onVisible);
+      if (ws) { try { ws.close(); } catch (e) {} }
+    };
   }
 
   window.API = { demo, call, watch, resetDemo() { try { localStorage.removeItem(KEY); } catch (e) {} } };

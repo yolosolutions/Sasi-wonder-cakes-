@@ -63,9 +63,11 @@ Nobody, including this repository, ever sees these values.
 - **Backup:** in Cloudflare open the database → **Settings → Time Travel** to go back to any minute in the last 30 days. For a file copy, run `npx wrangler d1 export sasi-wonder-cakes-db --remote --output backup.sql` once a month. The **Students** tab can also download a CSV.
 
 ## Live updates (no reloading)
-The dashboard and the class page keep themselves up to date. Every save (a booking, a payment, a class edit) bumps one counter in the database, and each open page asks for that counter every 15 seconds (the dashboard) or 30 seconds (the class page). It reloads only when the number has changed. No extra service is needed.
-- **New booking while the dashboard is open:** a message such as "New booking: Priya · Sat 7 Nov" appears, and the lists update. It will not redraw while you are typing, have a form open, or are on the Settings or Menu pages, so you never lose what you are typing.
-- **Tab in the background:** the dashboard asks about once a minute, and the tab title shows how many new bookings arrived, like "(2) Admin – Sasi Wonder Cakes".
+The dashboard and the class page update the moment something is saved, with no reloading and no extra service to sign up for.
+- **How:** every open page keeps a WebSocket connection to a small Cloudflare **Durable Object** (the "live room", `worker/room.mjs`). After each save the Worker tells the room, and the room tells every connected page that something changed. Only a counter is sent, never names or emails; the page then asks the normal API for the data. While nothing is happening the room sleeps and costs nothing. Durable Objects are free on Cloudflare's free plan (the SQLite kind, which `wrangler.jsonc` already asks for).
+- **Safety net:** if the connection drops (poor mobile signal, an old browser), the page reconnects by itself and meanwhile keeps checking every 15 seconds (30 on the class page), so nothing is ever missed. The room accepts 100 connections at once; further pages just use the checking.
+- **New booking while the dashboard is open:** a message such as "New booking: Priya · Sat 7 Nov" appears and the lists update. It will not redraw while you are typing, have a form open, or are on the Settings or Menu pages, so you never lose what you are typing.
+- **Tab in the background:** the tab title shows how many new bookings arrived, like "(2) Admin – Sasi Wonder Cakes".
 - **Desktop alerts:** the **Alerts** button at the top turns on pop-up alerts from your browser, even when the tab is in the background. You must leave the dashboard tab open. For alerts when it is closed, use email (the Gmail app on your phone).
 - **Students:** the seats-left counts on the class page update on their own, so nobody books a seat that has just gone.
 
@@ -160,6 +162,7 @@ _headers          security and caching rules (Cloudflare / Netlify)
 wrangler.jsonc    tells Cloudflare the project name and the folder to publish
 .assetsignore     files Cloudflare must not publish (backend, worker, tests, guides)
 worker/index.mjs  the backend: answers /api, talks to the database, sends the emails
+worker/room.mjs   the live room (Durable Object) that pushes updates to open pages
 tests/            backend tests, run with: node tests/backend.test.mjs
 .github/          runs the tests automatically on every push
 PRODUCTION.md     go-live checklist
