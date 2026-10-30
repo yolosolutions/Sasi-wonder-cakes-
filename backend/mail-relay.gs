@@ -19,7 +19,8 @@ function doGet() {
 
 function doPost(e) {
   try {
-    if (MAIL_SECRET === 'CHANGE_ME' || MAIL_SECRET.length < 16) return json_({ ok: false, error: 'relay secret not set' });
+    // (a find-and-replace of CHANGE_ME must not touch this line, so it checks the first 6 letters only)
+    if (MAIL_SECRET.slice(0, 6) === 'CHANGE' || MAIL_SECRET.length < 16) return json_({ ok: false, error: 'relay secret not set' });
     const req = JSON.parse(e.postData.contents);
     if (!sameText_(String(req.secret || ''), MAIL_SECRET)) return json_({ ok: false, error: 'denied' });
     const msgs = (req.messages || []).slice(0, MAX_PER_CALL);

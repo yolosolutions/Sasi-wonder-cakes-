@@ -29,7 +29,7 @@ Cloudflare Workers, connected to the GitHub repo, hosts both the pages and the b
 Cloudflare cannot send email on the free plan, so a small Google script sends it from your Gmail. It stores nothing and only sends what the Worker hands it, and only when the secret matches.
 1. Make a secret: run `node -e "console.log(require('crypto').randomBytes(24).toString('hex'))"` and keep the result. (Any long random text works.)
 2. Go to <https://script.google.com> (signed in as yolosolutions01@gmail.com) → **New project**. Delete the starter code and paste all of `backend/mail-relay.gs`.
-3. Replace `CHANGE_ME` on the `MAIL_SECRET` line with your secret. **Save**.
+3. On the one line `const MAIL_SECRET = 'CHANGE_ME';` replace CHANGE_ME with your secret (edit just that line by hand; do not use find-and-replace). **Save**.
 4. **Deploy → New deployment** → gear icon → **Web app**. **Execute as: Me**, **Who has access: Anyone**. **Deploy**, then **Authorize access** (on "Google hasn't verified this app" choose **Advanced → Go to … (unsafe)**; it is your own script). Allow the permissions; they let it send mail as you.
 5. Copy the **Web app URL** (ends in `/exec`).
 
