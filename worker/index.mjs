@@ -549,12 +549,16 @@ async function markPaid(env, ctx, id) {
   if (expired && booked >= sess.capacity) throw new UserError('The hold on this seat ran out and the class is full now. Raise the seats or remove someone first.');
   const paidAt = stamp();
   const n = await run(db, "UPDATE bookings SET status = 'confirmed', paidAt = ?, expires = '' WHERE id = ? AND status = 'pending'", paidAt, id);
-  if (n) {
-    row.status = 'confirmed'; row.paidAt = paidAt; row.expires = '';
-    sess.booked = booked + (expired ? 1 : 0);
-    ctx.waitUntil(sendConfirmedEmail(env, row, sess, settings).catch((e) => console.error('confirm email', e)));
-  }
-  return { ok: true };
+  if (!n) return { ok: true };
+  row.status = 'confirmed'; row.paidAt = paidAt; row.expires = '';
+  sess.booked = booked + (expired ? 1 : 0);
+  // The admin is waiting on this button, so say plainly whether the student's email really went out.
+  let emailed = false, emailError = '';
+  try {
+    emailed = (await sendMails(env, [confirmedEmail(row, sess, settings)]))[0];
+    if (!emailed) emailError = 'the email relay could not send it';
+  } catch (e) { console.error('confirm email', e); emailError = e.message; }
+  return { ok: true, emailed, emailError };
 }
 
 async function removeBooking(db, id) {
@@ -805,10 +809,6 @@ function confirmedEmail(b, s, settings) {
       '<p>Booking reference: <b>' + b.code + '</b></p>' +
       '<p>Questions? WhatsApp us on +' + waNum(settings.whatsappNumber, settings.countryCode) + '.</p>' +
       '<p>- ' + esc(brand) + '</p>'), brand);
-}
-
-async function sendConfirmedEmail(env, b, s, settings) {
-  await sendMails(env, [confirmedEmail(b, s, settings)]);
 }
 
 // Sent right after booking a paid class: how to pay by UPI. The Meet link comes after the payment is confirmed.

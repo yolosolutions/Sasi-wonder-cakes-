@@ -141,7 +141,7 @@ fails(await call({ action: 'markPaid', id: adm0.bookings[0].id }), 'marking paid
 const firstPay = adm0.bookings.find((b) => b.email === 'anitha@example.com');
 t.mails.length = 0;
 r = await A({ action: 'markPaid', id: firstPay.id });
-ok(r.ok && t.mails.length === 1 && t.mails[0].to === 'anitha@example.com' && /Payment received/.test(t.mails[0].subject) && t.mails[0].htmlBody.includes(MEET) && t.mails[0].htmlBody.includes('internet connection'), 'Mark paid emails the student their Meet link and what to keep ready');
+ok(r.ok && r.emailed === true && t.mails.length === 1 && t.mails[0].to === 'anitha@example.com' && /Payment received/.test(t.mails[0].subject) && t.mails[0].htmlBody.includes(MEET) && t.mails[0].htmlBody.includes('internet connection'), 'Mark paid emails the student their Meet link and what to keep ready');
 await A({ action: 'markPaid', id: firstPay.id }); ok(t.mails.length === 1, 'marking paid twice sends nothing more');
 adm0 = await A({ action: 'adminGet' });
 ok(adm0.bookings.find((b) => b.id === firstPay.id).status === 'confirmed' && adm0.bookings.find((b) => b.id === firstPay.id).paidAt.length > 0, 'booking is confirmed with a paid time');
@@ -363,6 +363,13 @@ console.log('# email relay problems');
   const booked = await n.call({ action: 'register', agree: true, sessionId: sid, name: 'Still Works', phone: '9788888888', email: 'sw@example.com' });
   ok(booked.ok, 'a booking still succeeds when emails cannot be sent');
   ok((await m.call({ action: 'testNotify', token: 'bogus' })).code === 'auth', 'test alert needs the admin login');
+  await m.call({ action: 'saveSettings', token: tk, settings: { price: '500' } });
+  await m.call({ action: 'generateWeekends', token: tk, month, days: [6] });
+  const msid = (await m.call({ action: 'getPublic' })).sessions[0].id;
+  await m.call({ action: 'register', agree: true, sessionId: msid, name: 'Pays Late', phone: '9799999999', email: 'pl@example.com' });
+  const mbid = m.rows("SELECT id FROM bookings WHERE email = 'pl@example.com'")[0].id;
+  const paid = await m.call({ action: 'markPaid', token: tk, id: mbid });
+  ok(paid.ok && paid.emailed === false && /denied/.test(paid.emailError) && m.rows('SELECT status FROM bookings WHERE id = ?', mbid)[0].status === 'confirmed', 'Mark paid still confirms the seat but tells the admin when the email could not be sent: ' + paid.emailError);
 }
 
 console.log('# the starter menu list in the backend and the website are the same');

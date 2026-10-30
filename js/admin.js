@@ -441,8 +441,13 @@
         case 'addcustom': addCustom(); break;
         case 'markpaid': {
           const b = S.bookings.find((q) => q.id === id); t.disabled = true;
-          try { await adm('markPaid', { id }); } finally { t.disabled = false; }
-          await refresh(); toast(API.demo ? 'Marked paid (demo: no email sent)' : 'Marked paid. ' + b.name + ' has been emailed the Meet link', 'ok'); break;
+          let r;
+          try { r = await adm('markPaid', { id }); } finally { t.disabled = false; }
+          await refresh();
+          if (API.demo) toast('Marked paid (demo: no email sent)', 'ok');
+          else if (r.emailed === false) toast('Marked paid, but the email to ' + b.name + ' was NOT sent (' + (r.emailError || 'unknown reason') + '). Send them the Meet link on WhatsApp.', 'bad');
+          else toast('Marked paid. ' + b.name + ' has been emailed the Meet link', 'ok');
+          break;
         }
         case 'copymeet': await copyText(t.dataset.link, 'Meet link copied'); break;
         case 'adddish': dishForm(); break;
