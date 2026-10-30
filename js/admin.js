@@ -20,24 +20,65 @@
       throw e;
     }
   }
-  async function refresh() {
+  let known = null;   // ids of the bookings this dashboard has already shown
+  let unread = 0;     // new bookings that arrived while this tab was in the background
+  let stale = false;  // fresh data arrived but the screen was busy, so it is not drawn yet
+  const baseTitle = () => 'Admin – ' + (S.settings.siteName || '');
+  async function refresh(live) {
     const d = await adm('adminGet');
+    const fresh = known ? d.bookings.filter((b) => !known.has(b.id)) : [];
+    known = new Set(d.bookings.map((b) => b.id));
     Object.assign(S, { settings: d.settings, sessions: d.sessions, bookings: d.bookings, menu: d.menu || [], today: d.today || SWC.todayISO() });
     $('#adm-name').textContent = (S.settings.siteName || 'Admin') + ' · Admin';
-    document.title = 'Admin – ' + (S.settings.siteName || '');
-    render();
+    document.title = (unread ? '(' + unread + ') ' : '') + baseTitle();
+    // A refresh that nobody asked for must not wipe what you are typing or editing.
+    if (!live || canRedraw()) render(); else stale = true;
+    if (live && fresh.length) announce(fresh);
   }
+
+  // ---------- live updates ----------
+  const NOTIFY = 'swc_admin_notify';
+  let stopWatch = null;
+  function canRedraw() {
+    const a = document.activeElement;
+    const typing = a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) && $('#view').contains(a);
+    return !dlg.open && !typing && (S.tab === 'classes' || S.tab === 'students');
+  }
+  setInterval(() => { if (stale && canRedraw()) { stale = false; render(); } }, 2000);
+  function startLive() { if (!stopWatch) stopWatch = API.watch(() => refresh(true), 15000, { background: true }); }
+  function stopLive() { if (stopWatch) stopWatch(); stopWatch = null; known = null; stale = false; }
+  const desktopOn = () => { try { return localStorage.getItem(NOTIFY) === '1' && 'Notification' in window && Notification.permission === 'granted'; } catch (e) { return false; } };
+  function showBell() { $('#bell').textContent = desktopOn() ? 'Alerts: on' : 'Alerts: off'; }
+  function announce(fresh) {
+    const one = fresh.length === 1 ? fresh[0] : null;
+    const cls = one && S.sessions.find((x) => x.id === one.sessionId);
+    const msg = one ? 'New booking: ' + one.name + (cls ? ' · ' + fmtDateShort(cls.date) : '') : fresh.length + ' new bookings';
+    toast(msg, 'ok');
+    if (document.hidden) {
+      unread += fresh.length; document.title = '(' + unread + ') ' + baseTitle();
+      if (desktopOn()) { try { new Notification(S.settings.siteName || 'Baking class', { body: msg }); } catch (e) {} }
+    }
+  }
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && unread) { unread = 0; document.title = baseTitle(); } });
+  $('#bell').onclick = async () => {
+    if (!('Notification' in window)) return toast('This browser cannot show desktop alerts. Email alerts still work.');
+    if (desktopOn()) { try { localStorage.setItem(NOTIFY, '0'); } catch (e) {} showBell(); return toast('Desktop alerts off'); }
+    const p = await Notification.requestPermission();
+    if (p === 'granted') { try { localStorage.setItem(NOTIFY, '1'); } catch (e) {} toast('Desktop alerts on. You will see new bookings even when this tab is in the background.', 'ok'); }
+    else toast('Alerts are blocked. Allow notifications for this site in your browser settings.', 'bad');
+    showBell();
+  };
 
   // ---------- login ----------
   function showLogin() { $('#app').hidden = true; $('#login').hidden = false; setTimeout(() => $('#pw').focus(), 50); }
-  function signOut() { store.set(null); showLogin(); }
+  function signOut() { store.set(null); stopLive(); showLogin(); }
   $('#login-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const go = $('#login-go'); go.disabled = true; go.textContent = 'Signing in…'; $('#login-err').textContent = '';
     try {
       const r = await API.call('login', { password: $('#pw').value });
       store.set(r.token); $('#pw').value = '';
-      await refresh(); $('#login').hidden = true; $('#app').hidden = false;
+      await refresh(); $('#login').hidden = true; $('#app').hidden = false; showBell(); startLive();
     } catch (err) { $('#login-err').textContent = err.message; }
     go.disabled = false; go.textContent = 'Sign in';
   });
@@ -505,7 +546,7 @@
   // ---------- boot ----------
   (async function boot() {
     if (!store.get()) return showLogin();
-    try { await refresh(); $('#app').hidden = false; }
+    try { await refresh(); $('#app').hidden = false; showBell(); startLive(); }
     catch (e) { if (e.code !== 'auth') { showLogin(); $('#login-err').textContent = e.message; } }
   })();
 })();

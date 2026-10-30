@@ -62,6 +62,13 @@ Nobody, including this repository, ever sees these values.
 - **Cancel or close a class:** open it and use *Close booking* or *Cancel class*. Then WhatsApp the students with the green buttons.
 - **Backup:** in Cloudflare open the database → **Settings → Time Travel** to go back to any minute in the last 30 days. For a file copy, run `npx wrangler d1 export sasi-wonder-cakes-db --remote --output backup.sql` once a month. The **Students** tab can also download a CSV.
 
+## Live updates (no reloading)
+The dashboard and the class page keep themselves up to date. Every save (a booking, a payment, a class edit) bumps one counter in the database, and each open page asks for that counter every 15 seconds (the dashboard) or 30 seconds (the class page). It reloads only when the number has changed. No extra service is needed.
+- **New booking while the dashboard is open:** a message such as "New booking: Priya · Sat 7 Nov" appears, and the lists update. It will not redraw while you are typing, have a form open, or are on the Settings or Menu pages, so you never lose what you are typing.
+- **Tab in the background:** the dashboard asks about once a minute, and the tab title shows how many new bookings arrived, like "(2) Admin – Sasi Wonder Cakes".
+- **Desktop alerts:** the **Alerts** button at the top turns on pop-up alerts from your browser, even when the tab is in the background. You must leave the dashboard tab open. For alerts when it is closed, use email (the Gmail app on your phone).
+- **Students:** the seats-left counts on the class page update on their own, so nobody books a seat that has just gone.
+
 ## How WhatsApp works (be aware)
 WhatsApp's official automatic messaging (Business API) is **paid**. For a zero-cost site, this project does the following:
 1. **Student → you:** after booking, a button opens WhatsApp with a ready-made confirmation message to **your** number. The student taps Send. This is official and free.

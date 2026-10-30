@@ -372,6 +372,28 @@ console.log('# email relay problems');
   ok(paid.ok && paid.emailed === false && /denied/.test(paid.emailError) && m.rows('SELECT status FROM bookings WHERE id = ?', mbid)[0].status === 'confirmed', 'Mark paid still confirms the seat but tells the admin when the email could not be sent: ' + paid.emailError);
 }
 
+console.log('# live updates (change counter)');
+{
+  const L = makeEnv();
+  const lt = (await L.call({ action: 'login', password: 'secret1' })).token;
+  const LA = (o) => L.call(Object.assign({ token: lt }, o));
+  const rev = async () => (await L.call({ action: 'pulse' })).rev;
+  const r0 = await rev();
+  ok(r0 === '0' && (await rev()) === r0 && !JSON.stringify(await L.call({ action: 'pulse' })).match(/token|email|phone/), 'the change counter starts at 0, reading it changes nothing, and it carries no data');
+  await LA({ action: 'getPublic' }); await LA({ action: 'adminGet' });
+  ok((await rev()) === r0, 'looking at the pages does not count as a change');
+  const sid = (await LA({ action: 'saveSession', session: { date: '2027-03-06', status: 'open' } })).id;
+  const r1 = await rev(); ok(r1 !== r0, 'saving a class moves the counter');
+  fails(await LA({ action: 'saveSession', session: { date: 'nope' } }), 'a refused save is rejected', /date/);
+  ok((await rev()) === r1, 'and a refused save does not');
+  await L.call({ action: 'register', agree: true, sessionId: sid, name: 'Live Student', phone: '9700000001', email: 'live@example.com' });
+  const r2 = await rev(); ok(r2 !== r1, 'a student booking moves the counter, so open pages reload');
+  const bid = L.rows('SELECT id FROM bookings')[0].id;
+  await LA({ action: 'removeBooking', id: bid });
+  ok((await rev()) !== r2, 'removing a student moves it too');
+  ok(!JSON.stringify(await LA({ action: 'adminGet' })).includes('_rev') && !JSON.stringify(await L.call({ action: 'getPublic' })).includes('_rev'), 'the counter is not mixed into the settings');
+}
+
 console.log('# the starter menu list in the backend and the website are the same');
 {
   const win = {}; vm.runInNewContext(fs.readFileSync(path.join(ROOT, 'js', 'common.js'), 'utf8'), { window: win, document: {}, console });

@@ -206,4 +206,9 @@
   const cached = readCache();
   if (cached) { state.settings = cached.settings; state.sessions = cached.sessions.filter((x) => x.date >= SWC.todayISO()); render(); }
   load(!!cached);
+
+  // Seat counts and new classes update by themselves. If the booking window is open, wait until it is closed.
+  let stale = false;
+  API.watch(() => { if (dlg.open) { stale = true; return; } return load(true); }, 30000);
+  dlg.addEventListener('close', () => { if (stale) { stale = false; load(true); } });
 })();

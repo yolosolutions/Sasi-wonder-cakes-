@@ -122,6 +122,8 @@
   }
 
   const demoHandlers = {
+    // demo mode has no server, so the "change counter" is a fingerprint of the saved data (it also catches edits made in another tab)
+    pulse() { let h = 5381; const t = localStorage.getItem(KEY) || ''; for (let i = 0; i < t.length; i++) h = ((h * 33) ^ t.charCodeAt(i)) >>> 0; return { ok: true, rev: String(h) }; },
     getPublic() {
       const db = load(); const bm = bookedMap(db); const today = SWC.todayISO();
       const settings = {}; PUBLIC_KEYS.forEach((k) => { settings[k] = db.settings[k]; });
@@ -243,5 +245,26 @@
     return fn(payload);
   }
 
-  window.API = { demo, call, resetDemo() { try { localStorage.removeItem(KEY); } catch (e) {} } };
+  // Live updates: asks the backend for its change counter every few seconds and calls onChange when the number is
+  // different from last time. While the tab is hidden it asks about once a minute (opts.background) or not at all.
+  function watch(onChange, everyMs, opts) {
+    let rev = null, busy = false, last = 0;
+    const background = !!(opts && opts.background);
+    async function tick() {
+      const visible = document.visibilityState === 'visible';
+      if (busy || (!visible && (!background || Date.now() - last < 55000))) return;
+      busy = true; last = Date.now();
+      try {
+        const r = await call('pulse');
+        if (rev !== null && r.rev !== rev) await onChange();
+        rev = r.rev;
+      } catch (e) { /* offline or signed out: try again next time */ } finally { busy = false; }
+    }
+    const id = setInterval(tick, everyMs || 15000);
+    document.addEventListener('visibilitychange', tick);
+    tick();
+    return () => { clearInterval(id); document.removeEventListener('visibilitychange', tick); };
+  }
+
+  window.API = { demo, call, watch, resetDemo() { try { localStorage.removeItem(KEY); } catch (e) {} } };
 })();

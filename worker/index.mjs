@@ -110,10 +110,21 @@ export async function handleApi(request, env, ctx) {
   return reply(out);
 }
 
+// Anything that changes what the pages show. Each one bumps the change counter (see "live updates" below).
+const WRITES = new Set(['register', 'saveSettings', 'saveSession', 'generateWeekends', 'deleteSession', 'addBooking',
+  'removeBooking', 'markPaid', 'saveMenuItem', 'deleteMenuItem']);
+
 async function route(req, env, ctx, request) {
+  const out = await dispatch(req, env, ctx, request);
+  if (out && out.ok && WRITES.has(req.action)) await bumpRev(env.DB);
+  return out;
+}
+
+async function dispatch(req, env, ctx, request) {
   if (!req || typeof req !== 'object') throw new UserError('Unknown action');
   const db = env.DB;
   switch (req.action) {
+    case 'pulse': return pulse(db);
     case 'getPublic': return getPublic(db);
     case 'register': return register(env, ctx, req);
     case 'login': return login(env, req, request);
@@ -240,6 +251,19 @@ function cleanMeet(v) {
   if (s === '') return '';
   if (!/^https:\/\/meet\.google\.com\/\S+$/.test(s)) throw new UserError('Paste a Google Meet link like https://meet.google.com/abc-defg-hij');
   return s;
+}
+
+// ---------- live updates ----------
+// There is no push channel (that would need paid or complex extras). Instead every save bumps one counter, and the
+// open pages ask "what is the counter?" every few seconds. That is a single tiny read; the pages only reload their
+// data when the number has changed.
+async function pulse(db) {
+  const row = await one(db, "SELECT value FROM settings WHERE key = '_rev'");
+  return { ok: true, rev: row ? row.value : '0' };
+}
+
+function bumpRev(db) {
+  return run(db, "INSERT INTO settings (key, value) VALUES ('_rev', '1') ON CONFLICT(key) DO UPDATE SET value = CAST(CAST(value AS INTEGER) + 1 AS TEXT)");
 }
 
 // ---------- settings ----------
