@@ -20,7 +20,7 @@ Nothing here needs a credit card.
 ## Step 1. Create the database (3 min)
 1. Cloudflare dashboard → **Storage & databases → D1 SQLite Database → Create database**. Name it `sasi-wonder-cakes-db`, leave the location on automatic.
 2. Copy its **Database ID** into the `database_id` line of `wrangler.jsonc` (already done for the live site).
-3. Open the database's **Console** tab, paste the whole of `backend/schema.sql`, and click **Execute**. The **Tables** tab then lists `settings`, `sessions`, `bookings`, `menu`, `tokens` and `limits`. It is safe to run the file again; it never deletes anything.
+3. Open the database's **Console** tab, paste the whole of `backend/schema.sql`, and click **Execute**. (The file has no comments on purpose: the Console squashes pasted text onto one line, and a comment would hide everything after it.) The **Tables** tab then lists `settings`, `sessions`, `bookings`, `menu`, `tokens` and `limits`. It is safe to run the file again; it never deletes anything.
 
 ## Step 2. Put the website and backend online (5 min)
 Cloudflare Workers, connected to the GitHub repo, hosts both the pages and the backend. Every push to `main` redeploys by itself. The full click-by-click is in [PRODUCTION.md](PRODUCTION.md). `wrangler.jsonc` already names the Worker (`worker/index.mjs`), the database, and the 7 AM schedule.

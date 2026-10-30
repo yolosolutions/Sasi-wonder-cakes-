@@ -1,6 +1,3 @@
--- Sasi Wonder Cakes: tables for Cloudflare D1.
--- Paste this whole file into the D1 database's Console tab and run it once.
--- Column names match the Google Sheet columns so the code stays easy to compare.
 
 CREATE TABLE IF NOT EXISTS settings (
   key   TEXT PRIMARY KEY,
@@ -49,13 +46,11 @@ CREATE TABLE IF NOT EXISTS menu (
   name     TEXT NOT NULL DEFAULT ''
 );
 
--- Admin sign-in sessions (only a hash of each token is stored).
 CREATE TABLE IF NOT EXISTS tokens (
   hash    TEXT PRIMARY KEY,
   expires INTEGER NOT NULL
 );
 
--- Sign-in lockout and booking rate limits.
 CREATE TABLE IF NOT EXISTS limits (
   key     TEXT PRIMARY KEY,
   count   INTEGER NOT NULL DEFAULT 0,
