@@ -237,6 +237,12 @@ footer.site a.btn.ghost, footer.site button.btn.ghost { color: #fff; border-colo
 footer.site a.btn.ghost:hover, footer.site button.btn.ghost:hover { background: rgba(255, 255, 255, .12); }
 .foot-script { grid-column: 1 / -1; font-family: var(--script); font-size: 2rem; line-height: 1; color: var(--butter); border-top: 1px solid rgba(255, 255, 255, .18); padding-top: 18px; }
 .foot-script small { font-family: var(--body); font-size: .85rem; color: #c5d2ea; margin-left: 12px; }
+.credit { text-align: center; font-size: .88rem; color: var(--muted); padding: 0 16px; }
+.credit b { font-weight: 700; color: var(--ink); }
+.credit .heart { font-size: 1.05em; }
+#app > .credit { margin: 0 0 28px; }
+footer.site .credit { grid-column: 1 / -1; color: #c5d2ea; margin: -6px 0 0; padding: 0; }
+footer.site .credit b { color: #fff; }
 
 .success { text-align: center; display: grid; gap: 12px; }
 .success .big { font-size: 3rem; }
@@ -270,7 +276,8 @@ footer.site a.btn.ghost:hover, footer.site button.btn.ghost:hover { background: 
 .hint-sm { color: var(--muted); font-size: .88rem; }
 
 /* ======== admin (kept plain and quick) ======== */
-.login { min-height: 100dvh; display: grid; place-items: center; padding: 16px; }
+.login { min-height: 100dvh; display: grid; place-items: center; padding: 16px; position: relative; }
+.login .credit { position: absolute; left: 0; right: 0; bottom: 14px; margin: 0; }
 .login .card { width: min(400px, 100%); gap: 4px; }
 .login h1 { font-size: 1.8rem; margin-bottom: 4px; }
 
@@ -281,7 +288,7 @@ footer.site a.btn.ghost:hover, footer.site button.btn.ghost:hover { background: 
 .nav { display: flex; gap: 4px; flex-wrap: wrap; }
 .nav button { border: none; background: transparent; padding: 8px 16px; border-radius: 999px; font-weight: 600; cursor: pointer; color: var(--muted); min-height: 40px; }
 .nav button[aria-selected="true"] { background: var(--brand-soft); color: var(--brand-text); }
-main.adm { padding: 24px 0 80px; }
+main.adm { padding: 24px 0 36px; }
 .stats { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); margin-bottom: 24px; }
 .stat { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; }
 .stat small { color: var(--muted); font-weight: 600; }
