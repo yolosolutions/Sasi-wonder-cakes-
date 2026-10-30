@@ -4,50 +4,48 @@ Nothing here needs a credit card.
 
 | Piece | Free service | What it does |
 |---|---|---|
-| Website | Cloudflare (or GitHub Pages / Netlify) | Shows the site to students |
-| Database + email | Google Sheet + Google Apps Script (your Gmail) | Stores classes and bookings, sends emails |
+| Website + backend | Cloudflare Workers (from GitHub) | Shows the site and answers its requests at `/api` |
+| Database | Cloudflare D1 (SQL) | Stores classes, bookings, menu and settings |
+| Email | Gmail, through a tiny Google Apps Script relay | Sends the booking, payment and class-day emails |
 | WhatsApp | `wa.me` links (+ optional CallMeBot) | See "How WhatsApp works" below |
 
-**One email for everything:** use **yolosolutions01@gmail.com** for this whole project: the Google account that owns the Sheet and the Apps Script (it is also the address the booking emails are sent from), GitHub, and the free host (Netlify, Cloudflare or GitHub Pages). Booking alerts go to the same address by default. You can change it any time under **Settings → Where you get notified**.
+**One email for everything:** use **yolosolutions01@gmail.com** for this whole project: Cloudflare, GitHub and the Google account that sends the emails. Booking alerts go to the same address by default. You can change it any time under **Settings → Where you get notified**.
 
-**Try it first:** open `index.html` in a browser (or run `python -m http.server 5173` in this folder and visit `http://localhost:5173`). With no backend connected it runs in **demo mode** with sample classes. The admin page is `admin.html`, demo password `admin`.
+**Try it first:** open `index.html` in a browser (or run `python -m http.server 5173` in this folder and visit `http://localhost:5173`) after emptying `API_URL` in `js/config.js`. With no backend connected it runs in **demo mode** with sample classes. The admin page is `admin.html`, demo password `admin`.
+
+**Why not keep everything in a Google Sheet?** An earlier version did. Google Apps Script answers in 2 to 3 seconds, which made the class list slow. D1 answers in a few milliseconds, sits in the same Cloudflare account as the website, and is only reachable through the Worker (it has no public address of its own).
 
 ---
 
-## Step 1. Create the database (2 min)
-1. Go to <https://sheets.google.com> and create a **blank spreadsheet**. Name it `Sasi Wonder Cakes`.
-2. Menu: **Extensions → Apps Script**.
-3. Delete everything in the editor, then paste the full contents of `backend/Code.gs`.
-4. Near the top, change `INITIAL_ADMIN_PASSWORD = 'CHANGE_ME'` to a password you will remember. Change `TZ` if you are not in India.
-5. Click the **Save** icon.
+## Step 1. Create the database (3 min)
+1. Cloudflare dashboard → **Storage & databases → D1 SQLite Database → Create database**. Name it `sasi-wonder-cakes-db`, leave the location on automatic.
+2. Copy its **Database ID** into the `database_id` line of `wrangler.jsonc` (already done for the live site).
+3. Open the database's **Console** tab, paste the whole of `backend/schema.sql`, and click **Execute**. The **Tables** tab then lists `settings`, `sessions`, `bookings`, `menu`, `tokens` and `limits`. It is safe to run the file again; it never deletes anything.
 
-## Step 2. Publish the backend (3 min)
-1. Click **Deploy → New deployment**. Click the gear icon and choose **Web app**.
-2. Set **Execute as: Me** and **Who has access: Anyone**.
-3. Click **Deploy** and **Authorize access**. Choose your Google account. If it says "Google hasn't verified this app", click **Advanced → Go to … (unsafe)**. This is your own script, so it is fine. Allow the permissions. They let it use the Sheet and send mail as you.
-4. Copy the **Web app URL**. It ends in `/exec`.
+## Step 2. Put the website and backend online (5 min)
+Cloudflare Workers, connected to the GitHub repo, hosts both the pages and the backend. Every push to `main` redeploys by itself. The full click-by-click is in [PRODUCTION.md](PRODUCTION.md). `wrangler.jsonc` already names the Worker (`worker/index.mjs`), the database, and the 7 AM schedule.
 
-## Step 3. Connect the website (1 min)
-Open `js/config.js` and paste the URL:
+## Step 3. Set up the Gmail relay (5 min)
+Cloudflare cannot send email on the free plan, so a small Google script sends it from your Gmail. It stores nothing and only sends what the Worker hands it, and only when the secret matches.
+1. Make a secret: run `node -e "console.log(require('crypto').randomBytes(24).toString('hex'))"` and keep the result. (Any long random text works.)
+2. Go to <https://script.google.com> (signed in as yolosolutions01@gmail.com) → **New project**. Delete the starter code and paste all of `backend/mail-relay.gs`.
+3. Replace `CHANGE_ME` on the `MAIL_SECRET` line with your secret. **Save**.
+4. **Deploy → New deployment** → gear icon → **Web app**. **Execute as: Me**, **Who has access: Anyone**. **Deploy**, then **Authorize access** (on "Google hasn't verified this app" choose **Advanced → Go to … (unsafe)**; it is your own script). Allow the permissions; they let it send mail as you.
+5. Copy the **Web app URL** (ends in `/exec`).
 
-```js
-window.SWC_CONFIG = { API_URL: 'https://script.google.com/macros/s/XXXX/exec' };
-```
+## Step 4. Give the Worker its three secrets (3 min)
+Cloudflare dashboard → **Workers & Pages → sasi-wonder-cakes → Settings → Variables and Secrets → Add**. For each, choose type **Secret** (not "Text", or a later deploy can erase it), then **Deploy**:
 
-## Step 4. Put the website online (5 min)
-**Recommended: Cloudflare.** Free traffic with no meter, no card, updates itself on every push, and it applies the security rules in the `_headers` file. The repo already contains `wrangler.jsonc` and `.assetsignore` for it. Full steps are in [PRODUCTION.md](PRODUCTION.md).
+| Name | Value |
+|---|---|
+| `ADMIN_PASSWORD` | the password for your first sign-in (change it in the dashboard afterwards) |
+| `MAIL_RELAY_URL` | the Web app URL from Step 3 |
+| `MAIL_SECRET` | the same secret you put in the relay script |
 
-Other options, if you prefer them:
-- **GitHub Pages** (3 clicks, no new account): works, but it cannot apply the `_headers` security rules and caches files for about 10 minutes.
-- **Netlify**: works, but its free plan runs on monthly credits and pauses the site when they run out.
-- **Render**: works for static sites too, but is built for servers, so it adds nothing here.
-
-Share the link with students. Your dashboard is at `<your-link>/admin.html`.
-
-**Before you share it, work through [PRODUCTION.md](PRODUCTION.md)**, a short go-live checklist including a ₹1 test payment.
+Nobody, including this repository, ever sees these values.
 
 ## Step 5. First login
-1. Open `admin.html` and sign in with the password from Step 1.
+1. Open `/admin` and sign in with the `ADMIN_PASSWORD` from Step 4.
 2. **Settings** tab: fill in your WhatsApp number, your email for alerts, the **price per student** (whole rupees, e.g. `1500`) and your **Google Meet link**. Save.
    - To get a Meet link, open <https://meet.google.com/new> and choose *Create a meeting for later*. Paste the link into Settings. You can give a single class its own link under **Edit**.
    - The Meet link is never shown on the public site. Students receive it only after they book (on screen and by email).
@@ -62,7 +60,7 @@ Share the link with students. Your dashboard is at `<your-link>/admin.html`.
 - **Change class time, price or Meet link:** Settings → Class defaults updates every class using the default. Edit a single class to give it its own time, price or link.
 - **See who's coming:** Classes tab → click a date. The **Students** tab searches everyone and downloads a CSV.
 - **Cancel or close a class:** open it and use *Close booking* or *Cancel class*. Then WhatsApp the students with the green buttons.
-- **Backup:** your data is in the Google Sheet. Open it any time, or use *File → Download*.
+- **Backup:** in Cloudflare open the database → **Settings → Time Travel** to go back to any minute in the last 30 days. For a file copy, run `npx wrangler d1 export sasi-wonder-cakes-db --remote --output backup.sql` once a month. The **Students** tab can also download a CSV.
 
 ## How WhatsApp works (be aware)
 WhatsApp's official automatic messaging (Business API) is **paid**. For a zero-cost site, this project does the following:
@@ -78,7 +76,7 @@ The **Menu** page in the dashboard is your master list of dishes. The first time
 - **Use it in a class:** open a class → **Edit** → **Dishes in this class** → choose a dish from the dropdown. It's added under its category, and you can add as many as you like.
 - **Removed one by mistake?** Every dish shows as a chip with a **×**. Tap the **×** to remove just that dish, or **Clear all** to start again. Type your own extra point in the box below the chips and press **Add**. **Edit as text** shows the same list as plain lines if you prefer typing.
 
-The list lives in the **Menu** tab of your Google Sheet, so you can also edit it there.
+The list is stored in the database; the dashboard's Menu page is the place to edit it.
 
 ## The class menu (what you'll teach, point by point)
 Each class has a **Dishes in this class** box under **Edit**. Choose dishes from the dropdown, or write one point per line, and start a line with `#` for a section title:
@@ -113,7 +111,6 @@ Students pay **your own UPI ID** with GPay, PhonePe or Paytm. There is no gatewa
 - An unpaid booking holds its seat for the hold time (default 24 hours), then stops blocking the seat. If the money arrives late, **Mark paid** still works as long as the class isn't full.
 - On class day, only paid students get the Meet link, and your summary lists anyone still unpaid.
 - Please test the whole thing once with a real ₹1 payment from a friend's phone. Some UPI apps are stricter about payment links to personal UPI IDs. If a button ever fails, the QR code and the copy-able UPI ID always work.
-- If you set up an earlier version already, paste the new `Code.gs` and redeploy (Deploy → Manage deployments → New version). The missing sheet columns are added automatically.
 
 ## Notifications: what gets sent, and when
 | When | To you (email + WhatsApp if you set the CallMeBot key) | To the student (email) |
@@ -127,7 +124,7 @@ Every student must give their own email, because that is where the link goes. On
 
 **What to keep ready:** in **Settings → Class-day notifications** write the default lists (one item per line): one for students, one for your own checklist. Under **Edit** on any class you can replace them, for example with that class's ingredient list.
 
-**Turn on the 7 AM notifications (one time):** in the Apps Script editor, choose the function `setupReminders` in the dropdown and click **Run**. After that it runs by itself every day. Switch it off any time in Settings. The hour is `REMINDER_HOUR` at the top of `Code.gs`.
+**The 7 AM notifications** are already on: Cloudflare runs them every day at 07:00 India time (the `crons` line in `wrangler.jsonc`, written in UTC as `30 1 * * *`). Switch them off any time in Settings.
 
 **Send them any time:** open a class in the dashboard and press **Send class-day alerts now**. Handy for testing, or if you decide to send them earlier or the trigger isn't set up.
 
@@ -137,10 +134,11 @@ Every student must give their own email, because that is where the link goes. On
 Students do not create passwords or log in. They only enter name, WhatsApp number and email. This is deliberate: the site never stores a student password. Only you have a password (for the dashboard).
 
 ## Changing the backend later
-If you edit `Code.gs`, use **Deploy → Manage deployments → pencil icon → Version: New version → Deploy**. The URL stays the same.
+Edit `worker/index.mjs`, run `node tests/backend.test.mjs`, then push to `main`. Cloudflare redeploys by itself and the address stays the same. New tables or columns go into `backend/schema.sql` and are run in the database Console.
 
 ## Free limits (plenty for a class)
-Gmail sending is capped at about 100 emails a day through Apps Script. A class of 10 uses roughly 40 emails over its whole life (payment email, confirmation and class-day reminder for each student, plus your alerts), spread over several days, so you are well under the cap. Apps Script and Sheets limits are far above what a baking class needs. Netlify, GitHub Pages and Cloudflare Pages are free for a site this small.
+- **Email:** Gmail sending through the relay is capped at about 100 emails a day. A class of 10 uses roughly 40 emails over its whole life (payment email, confirmation and class-day reminder for each student, plus your alerts), spread over several days, so you are well under the cap.
+- **Cloudflare:** the free plan allows 100,000 Worker requests and 5 million database reads a day, and 100,000 database writes a day. A baking class uses a tiny fraction.
 
 ## Look and feel
 The student site has a Pondicherry and French patisserie look: a striped bakery awning, a chalkboard "Au programme" card, navy street-sign date plates (like Pondicherry's French street signs), an ochre colonial-wall band, and a fleur-de-lis divider, all in your logo's orange and chocolate. Your logo and the illustrated baker come from your logo PDF and are in `assets/`. To change a colour, edit the variables at the top of `css/style.css`. To change the Instagram link, WhatsApp number, name or tagline, use **Settings** in the dashboard.
@@ -153,15 +151,17 @@ privacy.html      privacy notice and terms (text comes from Settings)
 404.html          "page not found" page
 _headers          security and caching rules (Cloudflare / Netlify)
 wrangler.jsonc    tells Cloudflare the project name and the folder to publish
-.assetsignore     files Cloudflare must not publish (backend, tests, guides)
-tests/            backend tests, run with: node tests/backend.test.js
+.assetsignore     files Cloudflare must not publish (backend, worker, tests, guides)
+worker/index.mjs  the backend: answers /api, talks to the database, sends the emails
+tests/            backend tests, run with: node tests/backend.test.mjs
 .github/          runs the tests automatically on every push
 PRODUCTION.md     go-live checklist
 assets/           logo, baker illustration and favicon (from your logo PDF)
 css/style.css     all styling (colours are the variables at the top)
-js/config.js      the one setting you must fill in (API_URL)
+js/config.js      where the site sends requests (/api; empty means demo mode)
 js/site.js        public page logic
 js/admin.js       dashboard logic
-js/api.js         talks to Google (and the demo mode)
-backend/Code.gs   paste this into Apps Script
+js/api.js         talks to the backend (and the demo mode)
+backend/schema.sql      the database tables (run once in the D1 Console)
+backend/mail-relay.gs   paste this into a Google Apps Script project (Step 3)
 ```

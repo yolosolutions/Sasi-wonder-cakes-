@@ -1,6 +1,6 @@
-// API client. With an API_URL it talks to the Google Apps Script backend (backend/Code.gs).
+// API client. With an API_URL it talks to the backend Worker (worker/index.mjs).
 // Without one it runs a DEMO backend stored in this browser's localStorage so you can try everything.
-// Code.gs is the source of truth; the demo mirrors its rules (capacity, duplicates, defaults, private fields).
+// The Worker is the source of truth; the demo mirrors its rules (capacity, duplicates, defaults, private fields).
 (function () {
   const url = (window.SWC_CONFIG || {}).API_URL;
   const demo = !url;
@@ -10,7 +10,7 @@
   async function remote(action, payload) {
     let res;
     try {
-      // text/plain keeps this a "simple" request, so the browser skips the CORS preflight Apps Script can't answer.
+      // text/plain keeps this a simple request that needs no CORS preflight.
       res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(Object.assign({ action }, payload)) });
     } catch (e) {
       throw fail('Could not reach the server. Please check your internet and try again.', 'network');

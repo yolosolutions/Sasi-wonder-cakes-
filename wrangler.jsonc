@@ -1,11 +1,26 @@
 {
-  // Tells Cloudflare how to publish this folder as a static website.
+  // Tells Cloudflare how to publish this project: the website files, plus the backend Worker that answers /api.
   // The project name in the Cloudflare dashboard must be exactly this name.
   "name": "sasi-wonder-cakes",
+  "main": "worker/index.mjs",
   "compatibility_date": "2026-09-01",
   "assets": {
     "directory": "./",
     // unknown addresses show 404.html
-    "not_found_handling": "404-page"
-  }
+    "not_found_handling": "404-page",
+    // only /api runs the Worker; every other address is served straight from the static files
+    "run_worker_first": ["/api"],
+    "binding": "ASSETS"
+  },
+  // the database (tables are in backend/schema.sql)
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "sasi-wonder-cakes-db",
+      "database_id": "566974ab-36ed-43cc-b593-fd4f2321a467"
+    }
+  ],
+  // 01:30 UTC = 07:00 India time: the class-day notifications
+  "triggers": { "crons": ["30 1 * * *"] },
+  "observability": { "enabled": true }
 }

@@ -73,7 +73,7 @@
     return detailsToText(groups);
   };
 
-  // Starter master list (from the Sasi Wonder Cakes menu PDF). Backend/Code.gs has the same list as MENU_SEED.
+  // Starter master list (from the Sasi Wonder Cakes menu PDF). worker/index.mjs has the same list as MENU_SEED.
   const MENU_SEED = {
     'Recipes': ['Egg-based brownie', 'Eggless brownie'],
     'Flavours & variations': ['Double chocolate', 'Triple chocolate', 'Nuts', 'Nutella', 'Biscoff', 'Oreo', 'Kitkat', 'Walnut'],

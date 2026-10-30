@@ -12,3 +12,5 @@ tests
 node_modules
 *.md
 .wrangler
+worker
+.dev.vars
